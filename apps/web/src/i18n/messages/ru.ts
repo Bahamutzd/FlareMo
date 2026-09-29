@@ -294,6 +294,8 @@ const messages = {
   "sidebar.toggle": "Переключить боковую панель",
   "sidebar.collapse": "Свернуть боковую панель",
   "sidebar.expand": "Развернуть боковую панель",
+  "sidebar.resize": "Изменить ширину боковой панели",
+  "list.resize": "Изменить ширину списка",
   "composer.ariaLabel": "Новая заметка",
   "composer.placeholder": "Запишите что-нибудь для себя будущего…",
   "composer.addAttachment": "Прикрепить файл",
@@ -325,6 +327,15 @@ const messages = {
   "memo.restore": "Восстановить",
   "memo.pin": "Закрепить",
   "memo.pinnedBadge": "Закреплено",
+  "memo.autosaveFailed":
+    "Не удалось автосохранить; попробуем снова при следующем изменении.",
+  "memo.saving": "Сохранение…",
+  "memo.saved": "Сохранено",
+  "memo.unsaved": "Не сохранено",
+  "memo.new": "Создать",
+  "memo.toolbar": "Форматирование",
+  "memo.toolH1": "Заголовок 1",
+  "memo.toolParagraph": "Обычный текст",
   "memo.unpin": "Открепить",
   "memo.moveToTimeline": "Вернуть в ленту",
   "memo.moveToTrash": "В корзину",
@@ -358,6 +369,19 @@ const messages = {
   "list.errorTitle": "Не удалось загрузить заметки",
   "list.errorDescription": "Проверьте соединение и попробуйте снова.",
   "list.loadMore": "Загрузить ещё",
+
+  "list.indexLabel": "Список заметок",
+
+  "list.readingPaneLabel": "Текст заметки",
+
+  "list.untitled": "Без названия",
+
+  "list.imageOnly": "[Изображение]",
+
+  "list.selectTitle": "Выберите заметку",
+
+  "list.selectDescription":
+    "Выберите заметку в списке, чтобы прочитать её здесь.",
   "explorer.records": "Заметки",
   "explorer.tags": "Теги",
   "explorer.streak": "дней подряд",

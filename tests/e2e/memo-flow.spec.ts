@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { E2E_BASE_URL } from "./auth-fixture";
+import { CARD_TIMELINE_VIEWPORT, THREE_PANE_VIEWPORT } from "./viewports";
+
+// Card-timeline assertions; the three-pane layout has its own spec.
+test.use({ viewport: CARD_TIMELINE_VIEWPORT });
 
 const E2E_COOKIE_MUTATION_OPTIONS = {
   headers: { origin: E2E_BASE_URL },
@@ -560,6 +564,8 @@ test("creates, follows, reads, and removes memo relations", async ({
 test("keeps activity labels and the focused composer fully visible", async ({
   page,
 }) => {
+  // The activity heatmap lives in the desktop explorer column.
+  await page.setViewportSize(THREE_PANE_VIEWPORT);
   await page.goto("/");
 
   const monthLabels = page.locator(

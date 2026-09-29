@@ -286,6 +286,8 @@ const messages = {
   "sidebar.toggle": "تبديل الشريط الجانبي",
   "sidebar.collapse": "إخفاء الشريط الجانبي",
   "sidebar.expand": "إظهار الشريط الجانبي",
+  "sidebar.resize": "تغيير عرض الشريط الجانبي",
+  "list.resize": "تغيير عرض القائمة",
   "composer.ariaLabel": "ملاحظة جديدة",
   "composer.placeholder": "اكتب شيئًا لنفسك في المستقبل…",
   "composer.addAttachment": "إضافة مرفق",
@@ -316,6 +318,15 @@ const messages = {
   "memo.restore": "استعادة",
   "memo.pin": "تثبيت",
   "memo.pinnedBadge": "مثبتة",
+  "memo.autosaveFailed":
+    "تعذّر الحفظ التلقائي، ستتم إعادة المحاولة عند التعديل التالي.",
+  "memo.saving": "جارٍ الحفظ…",
+  "memo.saved": "تم الحفظ",
+  "memo.unsaved": "غير محفوظ",
+  "memo.new": "جديد",
+  "memo.toolbar": "أدوات التنسيق",
+  "memo.toolH1": "عنوان رئيسي",
+  "memo.toolParagraph": "نص عادي",
   "memo.unpin": "إلغاء التثبيت",
   "memo.moveToTimeline": "إعادة إلى الخط الزمني",
   "memo.moveToTrash": "نقل إلى المهملات",
@@ -348,6 +359,18 @@ const messages = {
   "list.errorTitle": "تعذر تحميل الملاحظات",
   "list.errorDescription": "تحقق من الاتصال وأعد المحاولة.",
   "list.loadMore": "تحميل المزيد",
+
+  "list.indexLabel": "قائمة الملاحظات",
+
+  "list.readingPaneLabel": "محتوى الملاحظة",
+
+  "list.untitled": "بلا عنوان",
+
+  "list.imageOnly": "[صورة]",
+
+  "list.selectTitle": "اختر ملاحظة",
+
+  "list.selectDescription": "اختر ملاحظة من القائمة لقراءتها هنا.",
   "explorer.records": "الملاحظات",
   "explorer.tags": "الوسوم",
   "explorer.streak": "أيام متتالية",

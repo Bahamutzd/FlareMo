@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { E2E_BASE_URL } from "./auth-fixture";
+import { CARD_TIMELINE_VIEWPORT } from "./viewports";
+
+// Card-timeline assertions; the three-pane layout has its own spec.
+test.use({ viewport: CARD_TIMELINE_VIEWPORT });
 
 const E2E_COOKIE_MUTATION_OPTIONS = {
   headers: { origin: E2E_BASE_URL },

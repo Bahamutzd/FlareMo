@@ -76,6 +76,8 @@ type MemoListProps = {
   onLoadMore: () => void;
   onRetry: () => void;
   onTagClick?: (tag: string) => void;
+  /** Tapping a card body opens the memo's reading view. */
+  onOpenMemo?: (memo: Memo) => void;
 };
 
 function MemoCardSkeleton() {
@@ -127,6 +129,7 @@ export const MemoList = memo(function MemoList({
   onLoadMore,
   onRetry,
   onTagClick,
+  onOpenMemo,
 }: MemoListProps) {
   const { t } = useI18n();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -287,6 +290,7 @@ export const MemoList = memo(function MemoList({
             onRevokeShare={onRevokeShare}
             onShare={onShare}
             onTagClick={onTagClick}
+            onOpen={onOpenMemo}
             onTrash={onTrash}
             onUpdate={onUpdate}
           />

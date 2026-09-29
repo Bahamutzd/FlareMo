@@ -4,6 +4,7 @@ import type { Attachment, Memo, MemoVisibility, Share } from "@/api";
 import { MemoCardBody } from "@/components/memo-card/memo-card-body";
 import { MemoCardEditor } from "@/components/memo-card/memo-card-editor";
 import { MemoCardHeader } from "@/components/memo-card/memo-card-header";
+import { MemoCardTapSurface } from "@/components/memo-card/memo-card-tap-surface";
 import { useMemoCardActions } from "@/components/memo-card/use-memo-card-actions";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,8 @@ type MemoCardProps = {
   onRequestDelete?: (memo: Memo) => void;
   onRequestShareImage?: (memo: Memo) => void;
   onRequestVisibility?: (memo: Memo) => void;
+  /** Tapping the body opens the memo's reading view. */
+  onOpen?: (memo: Memo) => void;
 };
 
 export const MemoCard = memo(function MemoCard({
@@ -61,6 +64,7 @@ export const MemoCard = memo(function MemoCard({
   onRequestDelete,
   onRequestShareImage,
   onRequestVisibility,
+  onOpen,
 }: MemoCardProps) {
   // Expansion is per-card and resets on remount; it outlives an edit
   // round-trip, so it stays above the body/editor switch.
@@ -139,16 +143,22 @@ export const MemoCard = memo(function MemoCard({
           onSave={saveEditing}
         />
       ) : (
-        <MemoCardBody
-          attachments={attachments}
-          canManage={canManage}
-          expanded={expanded}
-          memo={memo}
-          onTagClick={onTagClick}
-          onToggleExpanded={() => setExpanded((value) => !value)}
-          searchQuery={searchQuery}
-          taskInteraction={taskInteraction}
-        />
+        <MemoCardTapSurface
+          cursor="pointer"
+          enabled={Boolean(onOpen)}
+          onActivate={() => onOpen?.(memo)}
+        >
+          <MemoCardBody
+            attachments={attachments}
+            canManage={canManage}
+            expanded={expanded}
+            memo={memo}
+            onTagClick={onTagClick}
+            onToggleExpanded={() => setExpanded((value) => !value)}
+            searchQuery={searchQuery}
+            taskInteraction={taskInteraction}
+          />
+        </MemoCardTapSurface>
       )}
     </article>
   );

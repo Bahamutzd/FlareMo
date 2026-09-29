@@ -4,9 +4,12 @@ import {
   E2E_INITIAL_PASSWORD,
   E2E_USERNAME,
 } from "./auth-fixture";
+import { CARD_TIMELINE_VIEWPORT } from "./viewports";
 
 // Real browser microphone/AudioWorklet + real memo API. Only ASR transport is simulated.
+// Timeline assertions target the card layout; the three-pane layout has its own spec.
 test.use({
+  viewport: CARD_TIMELINE_VIEWPORT,
   permissions: ["microphone"],
   launchOptions: {
     args: [

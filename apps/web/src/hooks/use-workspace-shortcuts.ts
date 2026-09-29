@@ -19,6 +19,9 @@ export function useWorkspaceShortcuts() {
   const displayedMemosRef = useRef<Memo[]>([]);
   const handleArchiveRef = useRef<(id: string) => void>(() => {});
   const handlePinRef = useRef<(id: string, pinned: boolean) => void>(() => {});
+  // Set while the three-pane layout writes new memos in the right pane;
+  // "c" opens one there instead of focusing the composer.
+  const newMemoRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -44,7 +47,8 @@ export function useWorkspaceShortcuts() {
         setSpotlightOpen(true);
         return;
       }
-      // "c" jumps straight into the composer for quick capture.
+      // "c" starts a new memo: the right pane's editor in the three-pane
+      // layout, the composer otherwise.
       if (
         event.key.toLocaleLowerCase() === "c" &&
         !editable &&
@@ -53,7 +57,10 @@ export function useWorkspaceShortcuts() {
         !event.ctrlKey &&
         !event.altKey
       ) {
-        if (document.getElementById("flaremo-composer-input")) {
+        if (newMemoRef.current) {
+          event.preventDefault();
+          newMemoRef.current();
+        } else if (document.getElementById("flaremo-composer-input")) {
           event.preventDefault();
           focusComposerInput();
         }
@@ -139,6 +146,7 @@ export function useWorkspaceShortcuts() {
     focusedMemoIndex,
     handleArchiveRef,
     handlePinRef,
+    newMemoRef,
     setShowShortcutsOpen,
     setSpotlightOpen,
     shortcutsOpen,

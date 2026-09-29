@@ -13,6 +13,56 @@ export function extractTags(content: string) {
   return [...tags];
 }
 
+/** A memo body reduced to the two plain-text lines a list row shows. */
+export type MemoListPreview = {
+  /** First non-empty line; empty when the body has no text at all. */
+  title: string;
+  /** The text that follows the title, flattened to one line. */
+  excerpt: string;
+  /** The body references an inline image. */
+  hasImage: boolean;
+};
+
+const INLINE_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
+
+function plainLine(line: string) {
+  return line
+    .replace(INLINE_IMAGE, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^\s{0,3}(#{1,6}\s+|>\s?|[-*+]\s+(\[[ xX]\]\s+)?|\d+[.)]\s+)/, "")
+    .replace(/(\*\*|__|~~|`)/g, "")
+    .replace(/(^|\s)#[\p{L}\p{N}_\-/]+/gu, "$1")
+    .trim();
+}
+
+function plainCodeLine(line: string) {
+  return line.trim();
+}
+
+/**
+ * Title and excerpt for the three-pane list. Fenced code keeps its content
+ * lines (a code-only note is titled by its first line of code) but drops the
+ * fence markers; Markdown syntax and trailing `#tag` tokens are stripped so
+ * the row reads as text.
+ */
+export function memoListPreview(content: string): MemoListPreview {
+  const lines: string[] = [];
+  let inFence = false;
+  for (const raw of content.split("\n")) {
+    if (/^\s*(`{3,}|~{3,})/.test(raw)) {
+      inFence = !inFence;
+      continue;
+    }
+    const line = inFence ? plainCodeLine(raw) : plainLine(raw);
+    if (line) lines.push(line);
+  }
+  return {
+    title: lines[0] ?? "",
+    excerpt: lines.slice(1).join(" "),
+    hasImage: /!\[[^\]]*\]\([^)]*\)/.test(content),
+  };
+}
+
 /**
  * Absolute timestamp for a memo. The year is only spelled out when it differs
  * from the current one: imported backfills routinely span many years (issue

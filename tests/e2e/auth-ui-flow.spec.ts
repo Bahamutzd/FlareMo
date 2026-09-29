@@ -23,9 +23,8 @@ test("keeps setup one-time, logs in, and manages a PAT from the account UI", asy
   await page.getByRole("button", { name: /^登录$|^Sign in$/i }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(
-    page.getByRole("textbox", { name: /新记录|New note/i }),
-  ).toBeVisible();
+  // The desktop workspace: new memos start from the list header.
+  await expect(page.getByTestId("new-memo-button")).toBeVisible();
   // auth-contract may have rotated the server-side session. Persist the
   // cookie created by this browser login so memo-ui never reads a stale state.
   await page.context().storageState({ path: E2E_AUTH_STATE });

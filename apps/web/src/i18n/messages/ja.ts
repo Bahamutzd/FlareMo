@@ -290,6 +290,8 @@ const messages = {
   "sidebar.toggle": "サイドバーを切り替え",
   "sidebar.collapse": "サイドバーを隠す",
   "sidebar.expand": "サイドバーを表示",
+  "sidebar.resize": "サイドバーの幅を変更",
+  "list.resize": "リストの幅を変更",
   "composer.ariaLabel": "新規ノート",
   "composer.placeholder": "未来の自分へ、何か書き残そう…",
   "composer.addAttachment": "添付ファイルを追加",
@@ -322,6 +324,14 @@ const messages = {
   "memo.restore": "復元",
   "memo.pin": "ピン留め",
   "memo.pinnedBadge": "ピン留め済み",
+  "memo.autosaveFailed": "自動保存に失敗しました。次の編集時に再試行します。",
+  "memo.saving": "保存中…",
+  "memo.saved": "保存済み",
+  "memo.unsaved": "未保存",
+  "memo.new": "新規",
+  "memo.toolbar": "書式",
+  "memo.toolH1": "見出し 1",
+  "memo.toolParagraph": "本文",
   "memo.unpin": "ピン留めを解除",
   "memo.moveToTimeline": "タイムラインへ戻す",
   "memo.moveToTrash": "ゴミ箱へ移動",
@@ -355,6 +365,18 @@ const messages = {
   "list.errorTitle": "ノートを読み込めませんでした",
   "list.errorDescription": "接続を確認して、もう一度お試しください。",
   "list.loadMore": "もっと読み込む",
+
+  "list.indexLabel": "メモ一覧",
+
+  "list.readingPaneLabel": "メモ本文",
+
+  "list.untitled": "無題",
+
+  "list.imageOnly": "[画像]",
+
+  "list.selectTitle": "メモを選択",
+
+  "list.selectDescription": "一覧からメモを選ぶと、ここに本文が表示されます。",
   "explorer.records": "ノート",
   "explorer.tags": "タグ",
   "explorer.streak": "連続記録日数",

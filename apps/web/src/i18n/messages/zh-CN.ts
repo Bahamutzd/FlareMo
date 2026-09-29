@@ -263,6 +263,8 @@ const messages = {
   "sidebar.toggle": "切换侧边栏",
   "sidebar.collapse": "收起侧栏",
   "sidebar.expand": "展开侧栏",
+  "sidebar.resize": "调整侧栏宽度",
+  "list.resize": "调整列表宽度",
   "composer.ariaLabel": "新记录",
   "composer.placeholder": "现在的想法是…",
   "composer.addAttachment": "添加附件",
@@ -293,6 +295,14 @@ const messages = {
   "memo.restore": "恢复",
   "memo.pin": "置顶",
   "memo.pinnedBadge": "已置顶",
+  "memo.autosaveFailed": "自动保存失败，下次修改时会重试。",
+  "memo.saving": "保存中…",
+  "memo.saved": "已保存",
+  "memo.unsaved": "未保存",
+  "memo.new": "新建",
+  "memo.toolbar": "格式工具栏",
+  "memo.toolH1": "一级标题",
+  "memo.toolParagraph": "正文",
   "memo.unpin": "取消置顶",
   "memo.moveToTimeline": "移回时间线",
   "memo.moveToTrash": "移到回收站",
@@ -322,6 +332,18 @@ const messages = {
   "list.errorTitle": "内容加载失败",
   "list.errorDescription": "网络恢复后再试一次。",
   "list.loadMore": "加载更多",
+
+  "list.indexLabel": "记录列表",
+
+  "list.readingPaneLabel": "记录正文",
+
+  "list.untitled": "无标题",
+
+  "list.imageOnly": "[图片]",
+
+  "list.selectTitle": "选择一条记录",
+
+  "list.selectDescription": "在中间的列表里点一条记录，正文会显示在这里。",
   "explorer.records": "记录",
   "explorer.tags": "标签",
   "explorer.streak": "连续天数",

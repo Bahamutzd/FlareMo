@@ -290,6 +290,8 @@ const messages = {
   "sidebar.toggle": "사이드바 전환",
   "sidebar.collapse": "사이드바 접기",
   "sidebar.expand": "사이드바 펼치기",
+  "sidebar.resize": "사이드바 너비 조절",
+  "list.resize": "목록 너비 조절",
   "composer.ariaLabel": "새 노트",
   "composer.placeholder": "미래의 나에게 남길 한마디를 적어 보세요…",
   "composer.addAttachment": "첨부 파일 추가",
@@ -321,6 +323,15 @@ const messages = {
   "memo.restore": "복원",
   "memo.pin": "고정",
   "memo.pinnedBadge": "고정됨",
+  "memo.autosaveFailed":
+    "자동 저장에 실패했습니다. 다음 편집 때 다시 시도합니다.",
+  "memo.saving": "저장 중…",
+  "memo.saved": "저장됨",
+  "memo.unsaved": "저장 안 됨",
+  "memo.new": "새로 만들기",
+  "memo.toolbar": "서식",
+  "memo.toolH1": "제목 1",
+  "memo.toolParagraph": "본문",
   "memo.unpin": "고정 해제",
   "memo.moveToTimeline": "타임라인으로 이동",
   "memo.moveToTrash": "휴지통으로 이동",
@@ -354,6 +365,18 @@ const messages = {
   "list.errorTitle": "노트를 불러오지 못했습니다",
   "list.errorDescription": "연결을 확인하고 다시 시도해 주세요.",
   "list.loadMore": "더 불러오기",
+
+  "list.indexLabel": "메모 목록",
+
+  "list.readingPaneLabel": "메모 본문",
+
+  "list.untitled": "제목 없음",
+
+  "list.imageOnly": "[이미지]",
+
+  "list.selectTitle": "메모를 선택하세요",
+
+  "list.selectDescription": "목록에서 메모를 고르면 여기에 본문이 표시됩니다.",
   "explorer.records": "노트",
   "explorer.tags": "태그",
   "explorer.streak": "연속 기록일",

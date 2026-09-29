@@ -1,4 +1,4 @@
-import { PanelLeftOpenIcon, SearchIcon } from "lucide-react";
+import { PanelLeftOpenIcon, PlusIcon, SearchIcon } from "lucide-react";
 import type { MemoSpace } from "@/api";
 import type { ExplorerView } from "@/components/flaremo-explorer";
 import { ScopeSwitcher } from "@/components/scope-switcher";
@@ -13,13 +13,16 @@ import { cn } from "@/lib/utils";
 
 /**
  * The timeline top bar: sidebar toggle, scope switcher and the two spotlight
- * entries (desktop pill, mobile icon), plus the mobile sidebar trigger.
+ * entries (desktop pill, mobile icon), plus the mobile sidebar trigger. Given
+ * `onNewMemo` (the three-pane layout), it ends with a "new" button that
+ * opens an empty memo in the right pane.
  */
 export function WorkspaceHeader({
   activeQuery,
   explorer,
   isTimelineScrolled,
   mobileSheetOpen,
+  onNewMemo,
   setMobileSheetOpen,
   setQuery,
   setSpace,
@@ -36,6 +39,7 @@ export function WorkspaceHeader({
   explorer: WorkspaceSidebarContent;
   isTimelineScrolled: boolean;
   mobileSheetOpen: boolean;
+  onNewMemo?: () => void;
   setMobileSheetOpen: (open: boolean) => void;
   setQuery: (q: string) => void;
   setSpace: (space: MemoSpace) => void;
@@ -110,6 +114,19 @@ export function WorkspaceHeader({
           >
             <SearchIcon />
           </Button>
+          {onNewMemo && (
+            <Button
+              className="gap-1"
+              data-testid="new-memo-button"
+              size="sm"
+              title={`${t("memo.new")} (C)`}
+              type="button"
+              onClick={onNewMemo}
+            >
+              <PlusIcon />
+              {t("memo.new")}
+            </Button>
+          )}
         </div>
       </div>
     </header>

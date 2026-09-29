@@ -5,7 +5,7 @@ import {
   PanelLeftCloseIcon,
   UploadIcon,
 } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type {
   CurrentFlareMoUser,
@@ -24,6 +24,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserMenu } from "@/components/user-menu";
+import { PaneResizeHandle } from "@/components/workspace/pane-resize-handle";
+import { usePaneWidth } from "@/hooks/use-pane-width";
 import { useI18n } from "@/i18n";
 import { dayFilterQuery } from "@/lib/calendar-date";
 import { cn } from "@/lib/utils";
@@ -202,31 +204,71 @@ function WorkspaceExplorerPanel({
   );
 }
 
-/** The desktop sidebar column, collapsing to zero width with the header button. */
+const SIDEBAR_WIDTH_KEY = "flaremo.sidebar.width";
+const SIDEBAR_DEFAULT_WIDTH = 312;
+const SIDEBAR_MIN_WIDTH = 248;
+const SIDEBAR_MAX_WIDTH = 480;
+
+/** The desktop sidebar's dragged width, shared by every workspace layout. */
+export function useSidebarWidth() {
+  return usePaneWidth(
+    SIDEBAR_WIDTH_KEY,
+    SIDEBAR_DEFAULT_WIDTH,
+    SIDEBAR_MIN_WIDTH,
+    SIDEBAR_MAX_WIDTH,
+  );
+}
+
+/**
+ * The desktop sidebar column, collapsing to zero width with the header button.
+ * Given `resize`, its right edge drags to set the width.
+ */
 export function WorkspaceSidebar({
   collapsed,
   explorer,
+  resize,
 }: {
   collapsed: boolean;
   explorer: WorkspaceSidebarContent;
+  resize?: ReturnType<typeof usePaneWidth>;
 }) {
+  const { t } = useI18n();
+  const [resizing, setResizing] = useState(false);
+  const width = resize?.width ?? SIDEBAR_DEFAULT_WIDTH;
   return (
     <aside
       aria-hidden={collapsed}
       className={cn(
-        "hidden lg:block h-full shrink-0 overflow-hidden motion-safe:transition-[width,opacity] motion-safe:duration-250 motion-safe:ease-signal",
-        collapsed
-          ? "w-0 opacity-0 pointer-events-none"
-          : "w-[312px] opacity-100",
+        "relative hidden lg:block h-full shrink-0 overflow-hidden",
+        // The width animates for collapse/expand, never while it follows a drag.
+        !resizing &&
+          "motion-safe:transition-[width,opacity] motion-safe:duration-250 motion-safe:ease-signal",
+        collapsed ? "opacity-0 pointer-events-none" : "opacity-100",
       )}
+      style={{ width: collapsed ? 0 : width }}
     >
-      <div className="no-scrollbar h-full w-[312px] overflow-y-auto border-r bg-background">
+      <div
+        className="no-scrollbar h-full overflow-y-auto border-r bg-background"
+        style={{ width }}
+      >
         <WorkspaceExplorerPanel
           {...explorer}
           importInputId="flaremo-import-file-desktop"
           showCollapse
         />
       </div>
+      {resize && !collapsed && (
+        <PaneResizeHandle
+          defaultWidth={resize.defaultWidth}
+          label={t("sidebar.resize")}
+          max={resize.max}
+          min={resize.min}
+          width={width}
+          onResize={resize.setWidth}
+          onResizeEnd={resize.saveWidth}
+          onResizingChange={setResizing}
+        />
+      )}
     </aside>
   );
 }

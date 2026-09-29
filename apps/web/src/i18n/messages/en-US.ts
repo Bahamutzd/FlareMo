@@ -290,6 +290,8 @@ const messages = {
   "sidebar.toggle": "Toggle sidebar",
   "sidebar.collapse": "Collapse sidebar",
   "sidebar.expand": "Expand sidebar",
+  "sidebar.resize": "Resize sidebar",
+  "list.resize": "Resize list",
   "composer.ariaLabel": "New note",
   "composer.placeholder": "What's on your mind…",
   "composer.addAttachment": "Add attachment",
@@ -321,6 +323,14 @@ const messages = {
   "memo.restore": "Restore",
   "memo.pin": "Pin",
   "memo.pinnedBadge": "Pinned",
+  "memo.autosaveFailed": "Autosave failed; it will retry on your next edit.",
+  "memo.saving": "Saving…",
+  "memo.saved": "Saved",
+  "memo.unsaved": "Unsaved",
+  "memo.new": "New",
+  "memo.toolbar": "Formatting",
+  "memo.toolH1": "Heading 1",
+  "memo.toolParagraph": "Body text",
   "memo.unpin": "Unpin",
   "memo.moveToTimeline": "Move to timeline",
   "memo.moveToTrash": "Move to trash",
@@ -354,6 +364,18 @@ const messages = {
   "list.errorTitle": "Could not load notes",
   "list.errorDescription": "Check your connection and try again.",
   "list.loadMore": "Load more",
+
+  "list.indexLabel": "Memo list",
+
+  "list.readingPaneLabel": "Memo content",
+
+  "list.untitled": "Untitled",
+
+  "list.imageOnly": "[Image]",
+
+  "list.selectTitle": "Select a memo",
+
+  "list.selectDescription": "Pick a memo from the list to read it here.",
   "explorer.records": "Notes",
   "explorer.tags": "Tags",
   "explorer.streak": "day streak",

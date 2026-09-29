@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatMemoRelativeTime, formatMemoTime } from "./memo";
+import {
+  formatMemoRelativeTime,
+  formatMemoTime,
+  memoListPreview,
+} from "./memo";
 
 // A fixed locale keeps the assertions about the formatter's decision (is the
 // year spelled out), not about the runner's default locale.
@@ -43,5 +47,31 @@ describe("formatMemoRelativeTime", () => {
     } else {
       expect(formatted).toContain(String(old.getFullYear()));
     }
+  });
+});
+
+describe("memoListPreview", () => {
+  it("titles by the first line and flattens the rest into the excerpt", () => {
+    expect(
+      memoListPreview("# 标题\n\n- 第一项\n- **第二项**\n\n#收藏 #wps"),
+    ).toEqual({ title: "标题", excerpt: "第一项 第二项", hasImage: false });
+  });
+
+  it("keeps code lines but drops fence markers", () => {
+    const preview = memoListPreview(
+      '```cpp\n#include"common.hpp"\nint main() {}\n```\n\n#wps',
+    );
+    expect(preview.title).toBe('#include"common.hpp"');
+    expect(preview.excerpt).toBe("int main() {}");
+  });
+
+  it("reports inline images on repeated calls and leaves image-only titles empty", () => {
+    const content = "![a.jpg](/file/attachments/a/a.jpg)\n\n#tag";
+    expect(memoListPreview(content)).toEqual({
+      title: "",
+      excerpt: "",
+      hasImage: true,
+    });
+    expect(memoListPreview(content).hasImage).toBe(true);
   });
 });

@@ -29,6 +29,12 @@ type UseMemoCardActionsOptions = {
   ) => Promise<void>;
   /** The memo's live public link, when the list already knows it. */
   share?: Share;
+  /**
+   * The body a visibility change writes. Defaults to the stored content; an
+   * always-editing surface passes its live (possibly unsaved) text so the
+   * change never reverts what the user just typed.
+   */
+  resolveContent?: () => Promise<string>;
   setIsEditing: Dispatch<SetStateAction<boolean>>;
   setIsSaving: Dispatch<SetStateAction<boolean>>;
 };
@@ -47,6 +53,7 @@ export function useMemoCardActions({
   onShare,
   onUpdate,
   share,
+  resolveContent,
   setIsEditing,
   setIsSaving,
 }: UseMemoCardActionsOptions) {
@@ -122,7 +129,7 @@ export function useMemoCardActions({
     if (visibility === memo.visibility) return;
     try {
       await onUpdate(id, {
-        content: memo.content,
+        content: resolveContent ? await resolveContent() : memo.content,
         visibility,
       });
       if (visibility === "public" && !share) await onShare(id);

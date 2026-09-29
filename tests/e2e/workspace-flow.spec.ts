@@ -1,5 +1,9 @@
 import type { MemoDto } from "@flaremo/contracts";
 import { expect, test } from "@playwright/test";
+import { CARD_TIMELINE_VIEWPORT } from "./viewports";
+
+// Card-timeline assertions; the three-pane layout has its own spec.
+test.use({ viewport: CARD_TIMELINE_VIEWPORT });
 
 function note(id: string, overrides: Partial<MemoDto> = {}): MemoDto {
   return {

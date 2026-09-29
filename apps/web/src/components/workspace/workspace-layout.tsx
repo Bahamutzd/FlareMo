@@ -17,6 +17,7 @@ import {
   type MemoStatsResponse,
 } from "@/api";
 import {
+  useSidebarWidth,
   WorkspaceSidebar,
   type WorkspaceSidebarContent,
 } from "@/components/workspace/workspace-sidebar";
@@ -127,6 +128,7 @@ export function WorkspaceLayout({
 
   const stats: MemoStatsResponse = statsQuery.data ?? EMPTY_STATS;
 
+  const sidebarWidth = useSidebarWidth();
   const sidebarContent: WorkspaceSidebarContent = useMemo(() => {
     const deleteTag = deleteTagMutation.mutate;
     const renameTag = renameTagMutation.mutate;
@@ -177,6 +179,7 @@ export function WorkspaceLayout({
         <WorkspaceSidebar
           collapsed={sidebarCollapsed}
           explorer={sidebarContent}
+          resize={sidebarWidth}
         />
         <div className="flex h-full min-w-0 flex-1 flex-col">
           {header({

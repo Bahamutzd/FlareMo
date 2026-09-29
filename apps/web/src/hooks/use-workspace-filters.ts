@@ -12,6 +12,7 @@ type WorkspaceSearch = {
   tag?: string;
   untagged?: boolean;
   compose?: boolean;
+  memo?: string;
 };
 
 /**
@@ -27,6 +28,7 @@ export function useWorkspaceFilters(search: WorkspaceSearch) {
   const untagged = Boolean(search.untagged);
   const query = search.q ?? "";
   const composeRequested = Boolean(search.compose);
+  const selectedMemoId = search.memo;
   // A query that is exactly one local day is not a text search; it renders as
   // a removable date chip and the search box stays empty.
   const dayFilter = dayFilterFromQuery(query);
@@ -87,6 +89,31 @@ export function useWorkspaceFilters(search: WorkspaceSearch) {
     },
     [navigate],
   );
+  const setSelectedMemoId = useCallback(
+    (memo: string | undefined) => {
+      void navigate({
+        replace: true,
+        search: (current) => ({ ...current, memo }),
+      });
+    },
+    [navigate],
+  );
+  // The narrow layout opens a memo as its own screen, so it takes a history
+  // entry: the browser/system back gesture returns to the list.
+  const openMemo = useCallback(
+    (memo: string) => {
+      void navigate({ search: (current) => ({ ...current, memo }) });
+    },
+    [navigate],
+  );
+  // Drops the PWA `compose=1` flag once it has been acted on, so a reload
+  // does not open a new memo again.
+  const clearComposeRequest = useCallback(() => {
+    void navigate({
+      replace: true,
+      search: (current) => ({ ...current, compose: undefined }),
+    });
+  }, [navigate]);
   const clearFilters = useCallback(() => {
     void navigate({
       replace: true,
@@ -101,12 +128,16 @@ export function useWorkspaceFilters(search: WorkspaceSearch) {
 
   return {
     activeTag,
+    clearComposeRequest,
     clearFilters,
     composeRequested,
     dayFilter,
     query,
+    openMemo,
+    selectedMemoId,
     setActiveTag,
     setQuery,
+    setSelectedMemoId,
     setSpace,
     setUntagged,
     setView,

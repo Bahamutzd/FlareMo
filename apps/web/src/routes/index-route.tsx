@@ -29,17 +29,33 @@ function WorkspaceRoutePage() {
   );
 }
 
+type IndexSearch = {
+  view: ViewMode | undefined;
+  space: Space | undefined;
+  q: string | undefined;
+  tag: string | undefined;
+  untagged: true | undefined;
+  compose: true | undefined;
+  // Optional (not `| undefined`) so links that spell out the other params
+  // need not mention it; omitting it simply clears the selection.
+  memo?: string;
+};
+
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: WorkspaceRoutePage,
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): IndexSearch => ({
     view: isViewMode(search.view) ? search.view : undefined,
     space: isSpace(search.space) ? search.space : undefined,
     q: typeof search.q === "string" && search.q ? search.q : undefined,
     tag: typeof search.tag === "string" && search.tag ? search.tag : undefined,
     untagged:
       search.untagged === true || search.untagged === "true" ? true : undefined,
+    // The three-pane workspace's selected memo (bare id), so a reload or a
+    // shared link reopens the same note in the reading pane.
+    memo:
+      typeof search.memo === "string" && search.memo ? search.memo : undefined,
     // Set by the PWA "new note" shortcut (`/?compose=1`) to focus the composer
     // on launch.
     compose:

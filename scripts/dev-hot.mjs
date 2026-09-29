@@ -121,7 +121,7 @@ async function ensureWebBuild() {
   const result = spawnSync(
     "pnpm",
     ["--filter", "@flaremo/web", "exec", "vite", "build"],
-    { stdio: "inherit" },
+    { shell: process.platform === "win32", stdio: "inherit" },
   );
   if (result.status !== 0) {
     throw new Error("前端产物构建失败，无法启动 wrangler dev。");
@@ -156,6 +156,8 @@ function spawnTagged(tag, command, args, onExit) {
   const child = spawn(command, args, {
     detached: process.platform !== "win32",
     env: { ...process.env, FORCE_COLOR: "1" },
+    // `pnpm` is a `.cmd` shim on Windows, which spawn cannot run directly.
+    shell: process.platform === "win32",
     stdio: ["ignore", "pipe", "pipe"],
   });
 

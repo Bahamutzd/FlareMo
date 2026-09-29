@@ -296,6 +296,8 @@ const messages = {
   "sidebar.toggle": "Alternar la barra lateral",
   "sidebar.collapse": "Ocultar barra lateral",
   "sidebar.expand": "Mostrar barra lateral",
+  "sidebar.resize": "Cambiar el ancho de la barra lateral",
+  "list.resize": "Cambiar el ancho de la lista",
   "composer.ariaLabel": "Nota nueva",
   "composer.placeholder": "Escribe algo para tu yo del futuro…",
   "composer.addAttachment": "Agregar adjunto",
@@ -327,6 +329,15 @@ const messages = {
   "memo.restore": "Restaurar",
   "memo.pin": "Fijar",
   "memo.pinnedBadge": "Fijada",
+  "memo.autosaveFailed":
+    "No se pudo guardar automáticamente; se reintentará con tu próxima edición.",
+  "memo.saving": "Guardando…",
+  "memo.saved": "Guardado",
+  "memo.unsaved": "Sin guardar",
+  "memo.new": "Nueva",
+  "memo.toolbar": "Formato",
+  "memo.toolH1": "Título 1",
+  "memo.toolParagraph": "Texto normal",
   "memo.unpin": "Dejar de fijar",
   "memo.moveToTimeline": "Volver a la línea de tiempo",
   "memo.moveToTrash": "Mover a la papelera",
@@ -360,6 +371,18 @@ const messages = {
   "list.errorTitle": "No se pudieron cargar las notas",
   "list.errorDescription": "Revisa tu conexión e inténtalo de nuevo.",
   "list.loadMore": "Cargar más",
+
+  "list.indexLabel": "Lista de notas",
+
+  "list.readingPaneLabel": "Contenido de la nota",
+
+  "list.untitled": "Sin título",
+
+  "list.imageOnly": "[Imagen]",
+
+  "list.selectTitle": "Selecciona una nota",
+
+  "list.selectDescription": "Elige una nota de la lista para leerla aquí.",
   "explorer.records": "Notas",
   "explorer.tags": "Etiquetas",
   "explorer.streak": "días seguidos",

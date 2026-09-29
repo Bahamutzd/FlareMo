@@ -24,6 +24,8 @@ type MemoCardBodyProps = {
   canManage: boolean;
   /** Expansion survives an edit round-trip, so the card holds it. */
   expanded: boolean;
+  /** Reading-pane mode: the whole body, no height cap, no collapse control. */
+  fullLength?: boolean;
   memo: Memo;
   onTagClick?: (tag: string) => void;
   onToggleExpanded: () => void;
@@ -36,6 +38,7 @@ export function MemoCardBody({
   attachments,
   canManage,
   expanded,
+  fullLength = false,
   memo,
   onTagClick,
   onToggleExpanded,
@@ -52,8 +55,9 @@ export function MemoCardBody({
   // Long bodies (transcripts, articles) collapse so one memo cannot dominate
   // the timeline.
   const isCollapsible =
-    memo.content.length > COLLAPSE_THRESHOLD ||
-    memo.content.split("\n").length > 12;
+    !fullLength &&
+    (memo.content.length > COLLAPSE_THRESHOLD ||
+      memo.content.split("\n").length > 12);
   const collapsed = isCollapsible && !expanded;
   // Intrinsic boxes for body images: uploaded dimensions ride the
   // attachments list, so a photo the author placed inline never shoves the
@@ -70,8 +74,9 @@ export function MemoCardBody({
         <div className="relative">
           <div
             className={cn(
-              "overflow-hidden motion-safe:transition-[max-height] motion-safe:duration-250 motion-safe:ease-signal",
-              collapsed ? "max-h-52" : "max-h-[1600px]",
+              !fullLength &&
+                "overflow-hidden motion-safe:transition-[max-height] motion-safe:duration-250 motion-safe:ease-signal",
+              !fullLength && (collapsed ? "max-h-52" : "max-h-[1600px]"),
             )}
           >
             <LazyMemoContent
