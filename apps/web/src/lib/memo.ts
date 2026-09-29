@@ -19,11 +19,14 @@ export type MemoListPreview = {
   title: string;
   /** The text that follows the title, flattened to one line. */
   excerpt: string;
-  /** The body references an inline image. */
-  hasImage: boolean;
+  /** Source of the first inline image, shown as the row thumbnail. */
+  imageSrc?: string;
 };
 
 const INLINE_IMAGE = /!\[[^\]]*\]\([^)]*\)/g;
+// `![alt](src)`, `![alt](src "title")` or `![alt](<src with spaces>)`.
+const FIRST_INLINE_IMAGE =
+  /!\[[^\]]*\]\(\s*(?:<([^>]+)>|([^)\s]+))(?:\s+"[^"]*")?\s*\)/;
 
 function plainLine(line: string) {
   return line
@@ -56,10 +59,12 @@ export function memoListPreview(content: string): MemoListPreview {
     const line = inFence ? plainCodeLine(raw) : plainLine(raw);
     if (line) lines.push(line);
   }
+  const image = FIRST_INLINE_IMAGE.exec(content);
+  const imageSrc = image?.[1] ?? image?.[2];
   return {
     title: lines[0] ?? "",
     excerpt: lines.slice(1).join(" "),
-    hasImage: /!\[[^\]]*\]\([^)]*\)/.test(content),
+    ...(imageSrc ? { imageSrc } : {}),
   };
 }
 

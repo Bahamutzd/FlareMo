@@ -54,7 +54,7 @@ describe("memoListPreview", () => {
   it("titles by the first line and flattens the rest into the excerpt", () => {
     expect(
       memoListPreview("# 标题\n\n- 第一项\n- **第二项**\n\n#收藏 #wps"),
-    ).toEqual({ title: "标题", excerpt: "第一项 第二项", hasImage: false });
+    ).toEqual({ title: "标题", excerpt: "第一项 第二项" });
   });
 
   it("keeps code lines but drops fence markers", () => {
@@ -65,13 +65,24 @@ describe("memoListPreview", () => {
     expect(preview.excerpt).toBe("int main() {}");
   });
 
-  it("reports inline images on repeated calls and leaves image-only titles empty", () => {
-    const content = "![a.jpg](/file/attachments/a/a.jpg)\n\n#tag";
+  it("returns the first inline image and leaves image-only titles empty", () => {
+    const content =
+      "![a.jpg](/file/attachments/a/a.jpg)\n\n![b.png](/file/attachments/b/b.png)\n\n#tag";
     expect(memoListPreview(content)).toEqual({
       title: "",
       excerpt: "",
-      hasImage: true,
+      imageSrc: "/file/attachments/a/a.jpg",
     });
-    expect(memoListPreview(content).hasImage).toBe(true);
+    // Same answer on a repeated call (no stateful global regex).
+    expect(memoListPreview(content).imageSrc).toBe("/file/attachments/a/a.jpg");
+  });
+
+  it("reads image sources with a title or in angle brackets", () => {
+    expect(
+      memoListPreview('Note ![x](/file/attachments/y/y.png "cap")').imageSrc,
+    ).toBe("/file/attachments/y/y.png");
+    expect(
+      memoListPreview("Note ![x](</file/attachments/z/a b.png>)").imageSrc,
+    ).toBe("/file/attachments/z/a b.png");
   });
 });

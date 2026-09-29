@@ -1,5 +1,5 @@
 import { ImageIcon, Loader2Icon, PinIcon } from "lucide-react";
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { Memo } from "@/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,8 @@ type MemoIndexListProps = {
 
 /**
  * The three-pane workspace's middle column: one compact row per memo (title,
- * excerpt, date). Selection is owned by the caller so it can live in the URL.
+ * excerpt, date, and a thumbnail of the first inline image). Selection is
+ * owned by the caller so it can live in the URL.
  */
 export const MemoIndexList = memo(function MemoIndexList({
   memos,
@@ -88,7 +89,7 @@ export const MemoIndexList = memo(function MemoIndexList({
               <button
                 aria-current={selected ? "true" : undefined}
                 className={cn(
-                  "flex w-full flex-col gap-1 border-b border-border/50 px-4 py-3 text-left motion-safe:transition-colors motion-safe:duration-150",
+                  "flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left motion-safe:transition-colors motion-safe:duration-150",
                   selected ? "bg-accent" : "hover:bg-muted/60",
                 )}
                 // Same hook the j/k shortcuts scroll to; the row precedes the
@@ -97,31 +98,38 @@ export const MemoIndexList = memo(function MemoIndexList({
                 type="button"
                 onClick={() => onSelect(item)}
               >
-                <span className="flex min-w-0 items-center gap-1.5">
-                  {item.pinned && (
-                    <PinIcon
-                      aria-label={t("memo.pinnedBadge")}
-                      className="size-3.5 shrink-0 fill-current text-brand-500 dark:text-brand-400"
-                    />
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {item.pinned && (
+                      <PinIcon
+                        aria-label={t("memo.pinnedBadge")}
+                        className="size-3.5 shrink-0 fill-current text-brand-500 dark:text-brand-400"
+                      />
+                    )}
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {preview.title ||
+                        (preview.imageSrc
+                          ? t("list.imageOnly")
+                          : t("list.untitled"))}
+                    </span>
+                  </span>
+                  {preview.excerpt && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {preview.excerpt}
+                    </span>
                   )}
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {preview.title ||
-                      (preview.hasImage
-                        ? t("list.imageOnly")
-                        : t("list.untitled"))}
+                  <span className="text-xs text-muted-foreground/80">
+                    {formatMemoTime(item.display_time, locale)}
                   </span>
                 </span>
-                {preview.excerpt && (
-                  <span className="truncate text-xs text-muted-foreground">
-                    {preview.excerpt}
-                  </span>
+                {preview.imageSrc && (
+                  // Keyed by source: an edited memo with a new first image
+                  // gets a fresh load instead of a stale failure fallback.
+                  <MemoRowThumbnail
+                    key={preview.imageSrc}
+                    src={preview.imageSrc}
+                  />
                 )}
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground/80">
-                  {formatMemoTime(item.display_time, locale)}
-                  {preview.hasImage && preview.title && (
-                    <ImageIcon aria-hidden="true" className="size-3" />
-                  )}
-                </span>
               </button>
             </li>
           );
@@ -150,6 +158,36 @@ export const MemoIndexList = memo(function MemoIndexList({
     </nav>
   );
 });
+
+/**
+ * The row's small preview of the memo's first inline image. Decorative (the
+ * title already says "[image]" for image-only notes), loaded lazily so a long
+ * list only fetches what scrolls into view; a broken source falls back to an
+ * image glyph instead of the browser's broken-image box.
+ */
+function MemoRowThumbnail({ src }: { src: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/60 bg-muted/40">
+      {failed ? (
+        <ImageIcon
+          aria-hidden="true"
+          className="size-4 text-muted-foreground"
+        />
+      ) : (
+        <img
+          alt=""
+          className="size-full object-cover"
+          decoding="async"
+          draggable={false}
+          loading="lazy"
+          src={src}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </span>
+  );
+}
 
 export function MemoIndexListSkeleton() {
   return (
