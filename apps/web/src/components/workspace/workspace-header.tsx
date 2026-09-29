@@ -62,7 +62,10 @@ export function WorkspaceHeader({
     >
       <div
         className={cn(
-          "flex h-14 items-center gap-2 px-5 lg:px-3 motion-safe:transition-[max-width,padding] motion-safe:duration-250 motion-safe:ease-signal",
+          // A size container: in the three-pane layout the bar is as wide as
+          // the (draggable) list column, not the viewport, so the search
+          // entry picks its form from the bar's own width.
+          "@container flex h-14 items-center gap-2 px-5 lg:px-3 motion-safe:transition-[max-width,padding] motion-safe:duration-250 motion-safe:ease-signal",
           sidebarCollapsed && "mx-auto w-full max-w-[640px]",
         )}
       >
@@ -89,7 +92,7 @@ export function WorkspaceHeader({
           open={mobileSheetOpen}
           onOpenChange={setMobileSheetOpen}
         />
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <ScopeSwitcher
             activeSpace={space}
             activeView={view}
@@ -98,16 +101,18 @@ export function WorkspaceHeader({
             onViewChange={setView}
           />
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* The search pill fills the space left of "new" and never pushes
+            into the scope switcher; below 300px it folds into an icon. */}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
           <SpotlightSearchTrigger
-            className="hidden md:flex"
+            className="hidden w-auto min-w-0 max-w-[260px] flex-1 sm:w-auto @[300px]:flex"
             onClick={() => setSpotlightOpen(true)}
             activeQuery={activeQuery}
             onClear={() => setQuery("")}
           />
           <Button
             aria-label={t("common.search")}
-            className="md:hidden"
+            className="shrink-0 @[300px]:hidden"
             size="icon-sm"
             variant="ghost"
             onClick={() => setSpotlightOpen(true)}
@@ -116,7 +121,7 @@ export function WorkspaceHeader({
           </Button>
           {onNewMemo && (
             <Button
-              className="gap-1"
+              className="shrink-0 gap-1"
               data-testid="new-memo-button"
               size="sm"
               title={`${t("memo.new")} (C)`}
