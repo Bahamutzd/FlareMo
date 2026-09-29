@@ -116,4 +116,28 @@ describe("removeTagFromContent", () => {
       removeTagFromContent("写 #知识/工作/项目A 笔记", "知识/工作/项目a"),
     ).toBe("写  笔记");
   });
+
+  it("leaves fenced code untouched, including an info string", () => {
+    const content =
+      '```cpp\n#include "a.h"\n#define MAX 1\n```\n\n#include 标签 #wps';
+    expect(removeTagFromContent(content, "include")).toBe(
+      '```cpp\n#include "a.h"\n#define MAX 1\n```\n\n 标签 #wps',
+    );
+    expect(removeTagFromContent(content, "define")).toBe(content);
+  });
+
+  it("treats an unclosed fence as code to the end", () => {
+    const content = "#wps 开头\n~~~\n#wps 在代码里";
+    expect(removeTagFromContent(content, "wps")).toBe(
+      " 开头\n~~~\n#wps 在代码里",
+    );
+  });
+});
+
+describe("rewriteTagInContent inside fences", () => {
+  it("never rewrites code lines", () => {
+    expect(
+      rewriteTagInContent("```\n#工作 代码\n```\n#工作 正文", "工作", "知识"),
+    ).toBe("```\n#工作 代码\n```\n#知识 正文");
+  });
 });

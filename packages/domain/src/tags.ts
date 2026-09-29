@@ -14,6 +14,36 @@ import { scopedReadScope, type TeamViewer } from "./team-permissions";
 // batch. Each chunk is self-contained (tag-row delete first, then inserts),
 // and the operations are idempotent: a retry simply finds fewer rows.
 const TAG_MUTATION_MEMOS_PER_BATCH = 15;
+// D1 caps a single statement at 100 bound parameters, so loading the memos a
+// tag touches is split into lookups of at most this many ids.
+const MEMO_LOOKUP_IDS_PER_QUERY = 90;
+
+/** Load memo rows by id in D1-sized chunks (row order is unspecified). */
+async function loadMemosByIds(
+  db: FlareMoDb,
+  memoIds: string[],
+): Promise<MemoRow[]> {
+  const rows: MemoRow[] = [];
+  for (
+    let offset = 0;
+    offset < memoIds.length;
+    offset += MEMO_LOOKUP_IDS_PER_QUERY
+  ) {
+    rows.push(
+      ...(await db
+        .select()
+        .from(memos)
+        .where(
+          inArray(
+            memos.id,
+            memoIds.slice(offset, offset + MEMO_LOOKUP_IDS_PER_QUERY),
+          ),
+        )
+        .all()),
+    );
+  }
+  return rows;
+}
 
 /**
  * Normalize one raw tag value into a canonical tag path.
@@ -233,11 +263,7 @@ export async function renameTag(
   }
 
   const memoIds = [...new Set(rows.map((row) => row.memoId))];
-  const memosToUpdate = await db
-    .select()
-    .from(memos)
-    .where(inArray(memos.id, memoIds))
-    .all();
+  const memosToUpdate = await loadMemosByIds(db, memoIds);
 
   const now = new Date().toISOString();
   for (
@@ -336,11 +362,7 @@ export async function deleteTag(
   }
 
   const memoIds = rows.map((row) => row.memoId);
-  const memosToUpdate = await db
-    .select()
-    .from(memos)
-    .where(inArray(memos.id, memoIds))
-    .all();
+  const memosToUpdate = await loadMemosByIds(db, memoIds);
 
   const now = new Date().toISOString();
   for (
@@ -510,23 +532,23 @@ function splitMarkdownLiteralSegments(
     const fenceMatch = inFence
       ? line.match(/^\s*(~{3,}|`{3,})\s*$/)
       : line.match(/^\s*(~{3,}|`{3,})/);
-    if (inFence && fenceMatch) {
+    // While inside a fence, `plain` accumulates the block (opening fence,
+    // code lines, closing fence) and leaves as one literal piece.
+    if (inFence) {
+      plain += line;
       // Closing fence of the same character run.
-      if (fenceMatch[1]?.[0] === fenceMarker[0]) {
-        plain += line;
-        pieces.push({ text: plain, literal: false });
+      if (fenceMatch && fenceMatch[1]?.[0] === fenceMarker[0]) {
+        push(plain, true);
         plain = "";
         inFence = false;
         fenceMarker = "";
-        continue;
       }
-      plain += line;
       continue;
     }
-    if (!inFence && fenceMatch) {
-      plain += line;
-      pieces.push({ text: plain, literal: true });
-      plain = "";
+    if (fenceMatch) {
+      // Text before the fence stays rewritable; the block starts here.
+      push(plain, false);
+      plain = line;
       inFence = true;
       fenceMarker = fenceMatch[1] ?? "";
       continue;
@@ -569,7 +591,8 @@ function splitMarkdownLiteralSegments(
     }
     plain += line.slice(cursor);
   }
-  push(plain, false);
+  // An unclosed fence runs to the end of the document, as in CommonMark.
+  push(plain, inFence);
   return pieces;
 }
 
