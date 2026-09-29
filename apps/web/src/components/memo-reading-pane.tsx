@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Attachment, Memo, MemoVisibility, Share } from "@/api";
 import { bindMemoAttachments, uploadAttachment } from "@/api";
 import { AttachmentGallery } from "@/components/attachment-gallery";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { MemoCardBody } from "@/components/memo-card/memo-card-body";
 import { MemoCardHeader } from "@/components/memo-card/memo-card-header";
 import { useMemoCardActions } from "@/components/memo-card/use-memo-card-actions";
@@ -194,6 +195,10 @@ function EditableMemoPane({
   const galleryAttachments = memo
     ? filterUnreferencedAttachments(attachments, memo.content)
     : [];
+  const [previewImage, setPreviewImage] = useState<{
+    src: string;
+    alt?: string;
+  } | null>(null);
 
   const autosaveStatus =
     autosave.state === "saving"
@@ -231,11 +236,24 @@ function EditableMemoPane({
         />
       </div>
       {/* The body scrolls under the fixed bar. A press on the blank space
-          below the text puts the caret at the end, as in a note app. */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: pointer shortcut only; the editor itself stays the keyboard target */}
+          below the text puts the caret at the end, as in a note app; a tap
+          on an image in the text opens it large. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: pointer shortcuts only; the editor itself stays the keyboard target */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: same as above */}
       <div
         className="min-h-0 flex-1 cursor-text overflow-y-auto"
         data-testid="memo-pane-scroll"
+        onClick={(event) => {
+          const target = event.target;
+          if (
+            !(target instanceof HTMLImageElement) ||
+            !target.closest("#flaremo-pane-editor-input")
+          ) {
+            return;
+          }
+          const src = target.getAttribute("src");
+          if (src) setPreviewImage({ src, alt: target.alt });
+        }}
         onMouseDown={(event) => {
           if (event.target !== event.currentTarget) return;
           event.preventDefault();
@@ -290,6 +308,14 @@ function EditableMemoPane({
           )}
         </article>
       </div>
+      <ImageLightbox
+        alt={previewImage?.alt}
+        open={previewImage !== null}
+        src={previewImage?.src}
+        onOpenChange={(open) => {
+          if (!open) setPreviewImage(null);
+        }}
+      />
     </div>
   );
 }

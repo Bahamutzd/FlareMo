@@ -57,7 +57,12 @@ type MarkdownImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "alt"> & {
  * as a broken-image glyph, so a failed load swaps the element for a caption
  * placeholder carrying the alt text.
  */
-function MarkdownImage({ alt, node: _node, ...props }: MarkdownImageProps) {
+function MarkdownImage({
+  alt,
+  node: _node,
+  onClick,
+  ...props
+}: MarkdownImageProps & { onClick?: () => void }) {
   const { t } = useI18n();
   const [failed, setFailed] = useState(false);
 
@@ -75,6 +80,20 @@ function MarkdownImage({ alt, node: _node, ...props }: MarkdownImageProps) {
       decoding="async"
       loading="lazy"
       onError={() => setFailed(true)}
+      onClick={(event) => {
+        if (!onClick) return;
+        event.stopPropagation();
+        onClick();
+      }}
+      onKeyDown={(event) => {
+        if (onClick && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          event.stopPropagation();
+          onClick();
+        }
+      }}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
     />
   );
 }
@@ -105,6 +124,7 @@ export const MemoContent = memo(function MemoContent({
   withHeadingIds = false,
   interactiveTaskLists = false,
   resolveImageDimensions,
+  onImageClick,
   onToggleTask,
   onConvertTask,
   rehypePlugins,
@@ -135,6 +155,8 @@ export const MemoContent = memo(function MemoContent({
   resolveImageDimensions?: (
     src: string,
   ) => { width: number; height: number } | undefined;
+  /** Opens a body image in the shared lightbox when supplied. */
+  onImageClick?: (image: { src: string; alt?: string }) => void;
   /**
    * Article-surface extras (Shiki highlighting) passed straight through to
    * the markdown processor. Memo cards never set it.
@@ -232,9 +254,8 @@ export const MemoContent = memo(function MemoContent({
             return <input {...props} readOnly type="checkbox" />;
           },
           img({ node: _node, ...props }) {
-            const dimensions = resolveImageDimensions?.(
-              typeof props.src === "string" ? props.src : "",
-            );
+            const src = typeof props.src === "string" ? props.src : "";
+            const dimensions = resolveImageDimensions?.(src);
             return (
               <MarkdownImage
                 {...props}
@@ -247,6 +268,15 @@ export const MemoContent = memo(function MemoContent({
                       },
                     }
                   : {})}
+                onClick={
+                  onImageClick && src
+                    ? () =>
+                        onImageClick({
+                          src,
+                          alt: typeof props.alt === "string" ? props.alt : "",
+                        })
+                    : undefined
+                }
               />
             );
           },

@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { Attachment, Memo } from "@/api";
 import { AttachmentGallery } from "@/components/attachment-gallery";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { LazyMemoContent } from "@/components/lazy-memo-content";
 import { MemoSearchExcerpt } from "@/components/memo-search-excerpt";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,10 @@ export function MemoCardBody({
   taskInteraction,
 }: MemoCardBodyProps) {
   const { t } = useI18n();
+  const [bodyImage, setBodyImage] = useState<{
+    src: string;
+    alt?: string;
+  } | null>(null);
   const tags = memo.payload.tags ?? extractTags(memo.content);
   // Body-referenced images render inline; the gallery keeps only the rest.
   const galleryAttachments = filterUnreferencedAttachments(
@@ -83,6 +88,7 @@ export function MemoCardBody({
               content={memo.content}
               interactiveTaskLists={canManage && taskCount > 0}
               resolveImageDimensions={resolveImageDimensions}
+              onImageClick={fullLength ? setBodyImage : undefined}
               onToggleTask={taskInteraction?.onToggleTask}
               onConvertTask={taskInteraction?.onConvertTask}
             />
@@ -147,6 +153,14 @@ export function MemoCardBody({
           </div>
         </footer>
       )}
+      <ImageLightbox
+        open={bodyImage !== null}
+        onOpenChange={(open) => {
+          if (!open) setBodyImage(null);
+        }}
+        src={bodyImage?.src}
+        alt={bodyImage?.alt}
+      />
     </>
   );
 }

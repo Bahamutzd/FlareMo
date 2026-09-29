@@ -45,6 +45,7 @@ export const LazyMemoContent = memo(function LazyMemoContent({
   withHeadingIds,
   interactiveTaskLists,
   resolveImageDimensions,
+  onImageClick,
   onToggleTask,
   onConvertTask,
   rehypePlugins,
@@ -57,6 +58,7 @@ export const LazyMemoContent = memo(function LazyMemoContent({
   resolveImageDimensions?: (
     src: string,
   ) => { width: number; height: number } | undefined;
+  onImageClick?: (image: { src: string; alt?: string }) => void;
   /** D2: live GFM checkboxes in the read view; see MemoContent. */
   onToggleTask?: (lineIndex: number, checked: boolean) => void;
   onConvertTask?: (lineIndex: number, text: string) => void;
@@ -77,6 +79,7 @@ export const LazyMemoContent = memo(function LazyMemoContent({
           onTimestampClick={onTimestampClick}
           rehypePlugins={rehypePlugins}
           resolveImageDimensions={resolveImageDimensions}
+          onImageClick={onImageClick}
           withHeadingIds={withHeadingIds}
           onToggleTask={onToggleTask}
           onConvertTask={onConvertTask}
