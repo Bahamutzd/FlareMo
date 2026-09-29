@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** Targets that keep their own click instead of activating the surface. */
+// Attachment-gallery images are inside a button and are therefore still
+// treated as independent preview controls. Bare Markdown images have no
+// action of their own, so they must bubble to the card's open handler.
 const OWN_CLICK_TARGETS =
-  "a, button, input, label, img, audio, video, [role='button']";
+  "a, button, input, label, audio, video, [role='button']";
 
 type MemoCardTapSurfaceProps = {
   children: ReactNode;
@@ -18,10 +21,12 @@ type MemoCardTapSurfaceProps = {
 /**
  * Wraps a memo's read face so a click (or tap) on the text activates it: the
  * timeline card opens the memo, the reading pane opens the editor. Links,
- * to-do boxes, tags, images and media keep their own click, and finishing a
- * text selection does not count as a click. Keyboard users reach the same
- * actions through the ⋯ menu and the list rows, so the wrapper stays a plain
- * container.
+ * to-do boxes, tags and media keep their own click, and finishing a text
+ * selection does not count as a click. Keyboard users reach the same actions
+ * through the ⋯ menu and the list rows, so the wrapper stays a plain
+ * container. Images embedded in memo Markdown intentionally follow the card
+ * action; attachment-gallery images remain independent because their parent
+ * preview button matches the selector above.
  */
 export function MemoCardTapSurface({
   children,
