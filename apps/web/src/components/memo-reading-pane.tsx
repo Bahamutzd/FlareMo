@@ -243,16 +243,27 @@ function EditableMemoPane({
       <div
         className="min-h-0 flex-1 cursor-text overflow-y-auto"
         data-testid="memo-pane-scroll"
+        // Capture phase, ahead of the editor: pressing an image must not
+        // focus the text (and pop the phone keyboard). Both the browser's
+        // default action and the editor's own press handling (which selects
+        // the image and focuses on release) are kept out; the click that
+        // follows still fires and opens the preview.
+        onMouseDownCapture={(event) => {
+          if (!bodyImage(event.target)) return;
+          event.preventDefault();
+          event.stopPropagation();
+        }}
         onClick={(event) => {
-          const target = event.target;
-          if (
-            !(target instanceof HTMLImageElement) ||
-            !target.closest("#flaremo-pane-editor-input")
-          ) {
-            return;
-          }
-          const src = target.getAttribute("src");
-          if (src) setPreviewImage({ src, alt: target.alt });
+          const image = bodyImage(event.target);
+          if (!image) return;
+          const src = image.getAttribute("src");
+          if (!src) return;
+          // A tap after the keyboard was already up (the user was typing)
+          // closes it too, so the preview gets the whole screen. A plain DOM
+          // blur: the editor command runs a transaction, and one over a
+          // memo whose image sits outside a paragraph throws.
+          editorRef.current?.view.dom.blur();
+          setPreviewImage({ src, alt: image.alt });
         }}
         onMouseDown={(event) => {
           if (event.target !== event.currentTarget) return;
@@ -311,6 +322,9 @@ function EditableMemoPane({
       <ImageLightbox
         alt={previewImage?.alt}
         open={previewImage !== null}
+        // Closing must not hand focus back to the editor: on a phone that
+        // brings the keyboard up although the user never tapped the text.
+        restoreFocus={false}
         src={previewImage?.src}
         onOpenChange={(open) => {
           if (!open) setPreviewImage(null);
@@ -318,6 +332,14 @@ function EditableMemoPane({
       />
     </div>
   );
+}
+
+/** The image an event landed on, when it is part of the pane's memo text. */
+function bodyImage(target: EventTarget | null): HTMLImageElement | null {
+  return target instanceof HTMLImageElement &&
+    target.closest("#flaremo-pane-editor-input")
+    ? target
+    : null;
 }
 
 /** The editable pane's identity row: time, badges and the ⋯ menu. */

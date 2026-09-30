@@ -22,6 +22,12 @@ type ImageLightboxProps = {
   alt?: string;
   downloadUrl?: string;
   filename?: string;
+  /**
+   * Whether closing returns focus to the element that had it before (the
+   * default). An editor that opens the preview passes `false`: refocusing
+   * its text would pop the phone keyboard up on close.
+   */
+  restoreFocus?: boolean;
 };
 
 /**
@@ -39,6 +45,7 @@ export function ImageLightbox({
   alt,
   downloadUrl,
   filename,
+  restoreFocus = true,
 }: ImageLightboxProps) {
   const { t } = useI18n();
   const [scale, setScale] = useState(MIN_SCALE);
@@ -100,6 +107,7 @@ export function ImageLightbox({
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md transition-opacity duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup
           className="fixed inset-0 z-50 flex flex-col px-2 py-3 outline-none select-none sm:p-4"
+          finalFocus={restoreFocus}
           initialFocus={viewportRef}
         >
           {/* Top action bar */}
