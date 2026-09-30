@@ -86,8 +86,14 @@ export function ImageLightbox({
     if (!a || !b) return 0;
     return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
   };
+  // A tap anywhere on the image area closes the preview, as in a phone
+  // gallery. The fingers of a pinch can land as a click once lifted, so a
+  // gesture that pinched marks itself and its trailing click is ignored.
+  const pinchedRef = useRef(false);
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length === 1) pinchedRef.current = false;
     if (event.touches.length !== 2) return;
+    pinchedRef.current = true;
     pinchRef.current = { distance: touchDistance(event.touches), scale };
   };
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -189,8 +195,13 @@ export function ImageLightbox({
               pans with native scroll. `m-auto` centers the image while it
               fits and falls back to the start edge once it overflows, so
               the top of a zoomed image stays reachable. */}
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: tap-to-close shortcut; Escape and the close button remain the keyboard path */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: same as above */}
           <div
             className="mt-2 flex flex-1 overflow-auto outline-none [touch-action:pan-x_pan-y]"
+            onClick={() => {
+              if (!pinchedRef.current) onOpenChange(false);
+            }}
             onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
             onTouchStart={handleTouchStart}
