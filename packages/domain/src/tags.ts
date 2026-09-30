@@ -563,11 +563,11 @@ function splitMarkdownLiteralSegments(
         while (line[index + run] === "`") run += 1;
         const close = line.indexOf("`".repeat(run), index + run);
         if (close !== -1) {
-          plain += line.slice(cursor, index);
-          pieces.push({
-            text: line.slice(index, close + run),
-            literal: true,
-          });
+          // The text gathered so far goes out first, so the pieces keep
+          // the document order.
+          push(plain + line.slice(cursor, index), false);
+          plain = "";
+          push(line.slice(index, close + run), true);
           cursor = close + run;
           index = cursor;
           continue;
@@ -581,8 +581,9 @@ function splitMarkdownLiteralSegments(
       ) {
         let end = index;
         while (end < line.length && !/\s/.test(line[end] as string)) end += 1;
-        plain += line.slice(cursor, index);
-        pieces.push({ text: line.slice(index, end), literal: true });
+        push(plain + line.slice(cursor, index), false);
+        plain = "";
+        push(line.slice(index, end), true);
         cursor = end;
         index = end;
         continue;

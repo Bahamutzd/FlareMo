@@ -132,6 +132,16 @@ describe("removeTagFromContent", () => {
       " 开头\n~~~\n#wps 在代码里",
     );
   });
+
+  it("keeps links and inline code where they were", () => {
+    const content = "访问：https://a.com/ 登录\n\n代码 `x` 结束 #wps\n";
+    expect(removeTagFromContent(content, "wps")).toBe(
+      "访问：https://a.com/ 登录\n\n代码 `x` 结束 \n",
+    );
+    expect(rewriteTagInContent(content, "wps", "便签")).toBe(
+      "访问：https://a.com/ 登录\n\n代码 `x` 结束 #便签\n",
+    );
+  });
 });
 
 describe("rewriteTagInContent inside fences", () => {
