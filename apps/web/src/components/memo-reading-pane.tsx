@@ -232,7 +232,13 @@ function EditableMemoPane({
             userEditedRef.current = true;
           }}
           onImageFiles={insertInlineImages}
+          onPin={
+            memo
+              ? () => onPin(getMemoResourceId(memo), !memo.pinned)
+              : undefined
+          }
           onTrash={handleToolbarTrash}
+          pinned={memo?.pinned}
         />
       </div>
       {/* The body scrolls under the fixed bar. A press on the blank space

@@ -11,6 +11,7 @@ import {
   ListIcon,
   ListOrderedIcon,
   PilcrowIcon,
+  PinIcon,
   QuoteIcon,
   SquareCheckBigIcon,
   StrikethroughIcon,
@@ -117,7 +118,7 @@ function ToolButton({
 /**
  * The reading pane's formatting bar, laid out like a note app's: undo, the
  * to-do toggle, inline marks, block styles, lists and quote, then the insert
- * actions, with the save status and delete at the far end. Commands run on
+ * actions, with the save status, pin and delete at the far end. Commands run on
  * the pane's editor and no-op while it is still loading; `onEdit` fires first
  * so the pane counts a toolbar change as the user's edit even when the
  * editor did not have focus.
@@ -128,7 +129,9 @@ export function MemoEditorToolbar({
   inputId,
   onEdit,
   onImageFiles,
+  onPin,
   onTrash,
+  pinned,
   status,
 }: {
   editorRef: React.RefObject<Editor | null>;
@@ -137,7 +140,10 @@ export function MemoEditorToolbar({
   inputId: string;
   onEdit: () => void;
   onImageFiles: (files: File[], position: number) => void;
+  /** Toggles the pin; absent while a new memo has not been saved. */
+  onPin?: () => void;
   onTrash: () => void;
+  pinned?: boolean;
   status?: ReactNode;
 }) {
   const { t } = useI18n();
@@ -155,7 +161,7 @@ export function MemoEditorToolbar({
       role="toolbar"
     >
       {/* The formatting group scrolls sideways when the pane is narrow;
-          the save status and delete stay pinned at the right edge. */}
+          the save status, pin and delete stay at the right edge. */}
       <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <ToolButton
           disabled={!formats.canUndo}
@@ -326,6 +332,23 @@ export function MemoEditorToolbar({
         </ToolButton>
       </div>
       {status}
+      {onPin && (
+        <Button
+          aria-label={pinned ? t("memo.unpin") : t("memo.pin")}
+          aria-pressed={pinned}
+          className={
+            pinned ? "shrink-0 text-primary" : "shrink-0 text-muted-foreground"
+          }
+          data-testid="memo-pin-toggle"
+          size="icon-sm"
+          title={pinned ? t("memo.unpin") : t("memo.pin")}
+          type="button"
+          variant={pinned ? "secondary" : "ghost"}
+          onClick={onPin}
+        >
+          <PinIcon className={pinned ? "fill-current" : undefined} />
+        </Button>
+      )}
       <Button
         aria-label={t("memo.moveToTrash")}
         className="shrink-0 text-muted-foreground hover:text-destructive"
