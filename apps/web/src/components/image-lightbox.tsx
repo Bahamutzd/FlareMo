@@ -25,11 +25,12 @@ type ImageLightboxProps = {
 };
 
 /**
- * Full-surface image preview. The image renders at its intrinsic width inside
- * a scrollable viewport, so a tall screenshot stays fully readable by
- * scrolling instead of being shrunk into an 85vh box. Wheel zoom (ctrl-free,
- * plain wheel scales like a viewer) grows beyond the viewport and the
- * horizontal overflow pans; Reset returns to the fit view.
+ * Full-surface image preview. The image opens fitted to the viewport width
+ * and centered, so a wide photo fills a phone screen and a tall screenshot
+ * stays fully readable by scrolling instead of being shrunk into an 85vh
+ * box. Wheel zoom (ctrl-free, plain wheel scales like a viewer) or a
+ * two-finger pinch grows it beyond the viewport and the overflow pans;
+ * Reset returns to the fit view.
  */
 export function ImageLightbox({
   open,
@@ -69,14 +70,36 @@ export function ImageLightbox({
     });
   }, []);
 
+  // Two-finger pinch: the scale follows the ratio of the finger distance to
+  // the distance when the second finger landed. One finger keeps native
+  // scrolling (the viewport allows panning only, not browser pinch-zoom).
+  const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
+  const touchDistance = (touches: React.TouchList) => {
+    const [a, b] = [touches[0], touches[1]];
+    if (!a || !b) return 0;
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  };
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2) return;
+    pinchRef.current = { distance: touchDistance(event.touches), scale };
+  };
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    const pinch = pinchRef.current;
+    if (!pinch || event.touches.length !== 2 || !pinch.distance) return;
+    zoomTo((pinch.scale * touchDistance(event.touches)) / pinch.distance);
+  };
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length < 2) pinchRef.current = null;
+  };
+
   if (!src) return null;
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md transition-opacity duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md transition-opacity duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup
-          className="fixed inset-0 z-50 flex flex-col p-4 outline-none select-none"
+          className="fixed inset-0 z-50 flex flex-col px-2 py-3 outline-none select-none sm:p-4"
           initialFocus={viewportRef}
         >
           {/* Top action bar */}
@@ -152,36 +175,44 @@ export function ImageLightbox({
             </div>
           </div>
 
-          {/* Scrollable viewport: fit-width by default (scale 1), wheel/button
-              zoom scales the intrinsic box; horizontal overflow pans with
-              native scroll. */}
+          {/* Scrollable viewport: fit-width by default (scale 1), so a wide
+              image fills a phone screen and a tall screenshot scrolls;
+              wheel, buttons or a two-finger pinch scale it and the overflow
+              pans with native scroll. `m-auto` centers the image while it
+              fits and falls back to the start edge once it overflows, so
+              the top of a zoomed image stays reachable. */}
           <div
-            className="mt-2 flex-1 overflow-auto rounded-lg"
+            className="mt-2 flex flex-1 overflow-auto outline-none [touch-action:pan-x_pan-y]"
+            onTouchEnd={handleTouchEnd}
+            onTouchMove={handleTouchMove}
+            onTouchStart={handleTouchStart}
             onWheel={handleWheel}
             ref={viewportRef}
           >
             <img
               src={src}
               alt={alt ?? filename ?? ""}
-              className="mx-auto block rounded-lg shadow-2xl"
+              className="m-auto block shrink-0 rounded-lg shadow-2xl"
               decoding="async"
+              draggable={false}
               onLoad={(event) => {
                 const img = event.currentTarget;
                 if (img.naturalWidth) {
                   setIntrinsic({ w: img.naturalWidth, h: img.naturalHeight });
                 }
               }}
-              style={
-                intrinsic
-                  ? {
-                      // Base width fills the viewport; scale multiplies it.
-                      // The intrinsic ratio is preserved by the browser.
-                      width: `${scale * 100}%`,
-                      maxWidth: "none",
-                      minWidth: `${intrinsic.w}px`,
-                    }
-                  : { maxWidth: "none", minWidth: "0px" }
-              }
+              style={{
+                // Fit view: the viewport width, but never beyond the image's
+                // own pixels, so a small image is not blown up and blurred.
+                // Zoom multiplies that base; the browser keeps the intrinsic
+                // ratio. Hidden until loaded so it never flashes at an
+                // unscaled size.
+                width: intrinsic
+                  ? `min(${scale * 100}%, ${scale * intrinsic.w}px)`
+                  : "100%",
+                maxWidth: "none",
+                visibility: intrinsic ? "visible" : "hidden",
+              }}
             />
           </div>
         </DialogPrimitive.Popup>
