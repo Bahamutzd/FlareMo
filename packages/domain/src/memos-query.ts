@@ -43,13 +43,6 @@ export function buildFtsQuery(value: string) {
     : undefined;
 }
 
-export function escapeLike(value: string) {
-  return value
-    .replaceAll("\\", "\\\\")
-    .replaceAll("%", "\\%")
-    .replaceAll("_", "\\_");
-}
-
 export function memoSearchScopeToState(
   scope: "timeline" | "archive" | "trash" | undefined,
 ) {

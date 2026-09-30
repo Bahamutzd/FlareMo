@@ -108,9 +108,8 @@ export async function listProjects(
   if (input.status) filters.push(eq(projects.status, input.status));
   const query = input.query?.trim();
   if (query) {
-    filters.push(
-      sql`${projects.name} LIKE ${`%${escapeLike(query)}%`} ESCAPE '\\'`,
-    );
+    // `instr`, not LIKE: D1 rejects LIKE patterns past 50 bytes.
+    filters.push(sql`instr(lower(${projects.name}), lower(${query})) > 0`);
   }
 
   const rows = await db
@@ -318,8 +317,4 @@ export async function hardDeleteExpiredProjects(
     await db.delete(projects).where(eq(projects.id, id));
   }
   return expired.length;
-}
-
-function escapeLike(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }

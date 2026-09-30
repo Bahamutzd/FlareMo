@@ -23,7 +23,6 @@ import {
   createDateKeyFormatter,
   decodePageToken,
   encodePageToken,
-  escapeLike,
   memoSearchScopeToState,
   toUtcDayStart,
 } from "./memos-query";
@@ -109,12 +108,15 @@ export async function listMemosForViewer(
       )`);
     } else {
       // Non-Latin text (CJK and friends) cannot use the unicode61 FTS index,
-      // so the query falls back to a LIKE scan. It is bounded by the same
-      // scan-limit window as CEL filters below instead of scanning the
-      // author's whole corpus on every keystroke.
+      // so the query falls back to a substring scan. It is bounded by the
+      // same scan-limit window as CEL filters below instead of scanning the
+      // author's whole corpus on every keystroke. `instr` rather than LIKE:
+      // D1 rejects LIKE patterns past 50 bytes ("pattern too complex"), which
+      // a pasted URL or a short CJK sentence already exceeds. Lowercasing
+      // both sides keeps LIKE's ASCII case-insensitivity.
       likeScanFallback = true;
       filters.push(
-        sql`${memos.content} LIKE ${`%${escapeLike(search.text)}%`} ESCAPE '\\'`,
+        sql`instr(lower(${memos.content}), lower(${search.text})) > 0`,
       );
     }
   }
@@ -149,15 +151,17 @@ export async function listMemosForViewer(
     }
     // Hierarchical tag filter: `工作` matches `工作` and any descendant
     // (`工作/项目A`), while `工作/项目A` matches itself and deeper children.
-    // The candidate set is exact-equals plus LIKE-prefix with the separator.
-    const escapedPrefix = escapeLike(`${tag}/`);
+    // The candidate set is exact-equals plus a prefix match on the separator
+    // (a range, not LIKE: D1 caps LIKE patterns at 50 bytes, which a CJK
+    // tag path reaches quickly). `/` + U+10FFFF bounds every descendant.
+    const prefix = `${tag}/`;
     filters.push(
       sql`EXISTS (
         SELECT 1 FROM ${memoTags}
         WHERE ${memoTags.memoId} = ${memos.id}
           AND (
             ${memoTags.tag} = ${tag}
-            OR ${memoTags.tag} LIKE ${`${escapedPrefix}%`} ESCAPE '\\'
+            OR (${memoTags.tag} >= ${prefix} AND ${memoTags.tag} < ${`${prefix}\u{10FFFF}`})
           )
       )`,
     );

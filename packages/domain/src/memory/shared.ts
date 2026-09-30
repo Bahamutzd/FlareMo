@@ -390,10 +390,11 @@ export function buildFtsCondition(content: string) {
   if (!trimmed) return undefined;
   const tokens = trimmed.match(/[\p{L}\p{N}_-]+/gu) ?? [];
   // Trigram FTS5 cannot match queries shorter than three characters, so a
-  // short or token-less query falls back to a plain LIKE substring match.
+  // short or token-less query falls back to a plain substring match (`instr`:
+  // D1 rejects LIKE patterns past 50 bytes).
   const trigrams = tokens.filter((token) => [...token].length >= 3);
   if (trigrams.length === 0) {
-    return sql`${memoryItems.content} LIKE ${`%${escapeLike(trimmed)}%`} ESCAPE '\\'`;
+    return sql`instr(lower(${memoryItems.content}), lower(${trimmed})) > 0`;
   }
   const match = trigrams
     .map((token) => `"${token.replaceAll('"', '""')}"`)
@@ -434,11 +435,4 @@ export async function searchFtsRanked(
     memoryId: row.memory_id,
     rank: index + 1,
   }));
-}
-
-function escapeLike(value: string) {
-  return value
-    .replaceAll("\\", "\\\\")
-    .replaceAll("%", "\\%")
-    .replaceAll("_", "\\_");
 }
