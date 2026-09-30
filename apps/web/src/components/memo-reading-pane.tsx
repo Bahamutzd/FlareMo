@@ -1,6 +1,14 @@
 import type { Editor } from "@tiptap/react";
 import { FileTextIcon } from "lucide-react";
-import { memo, type RefObject, Suspense, useId, useRef, useState } from "react";
+import {
+  memo,
+  type RefObject,
+  Suspense,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import type { Attachment, Memo, MemoVisibility, Share } from "@/api";
 import { bindMemoAttachments, uploadAttachment } from "@/api";
@@ -191,6 +199,25 @@ function EditableMemoPane({
     autosave.discard();
     onDiscardDraft?.();
   };
+
+  // Ctrl/⌘+S saves now, as in a note app, instead of the browser's "Save
+  // page as". Window-level so it also works with focus outside the editor.
+  const flushAutosave = autosave.flush;
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === "s"
+      ) {
+        event.preventDefault();
+        flushAutosave();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [flushAutosave]);
 
   const galleryAttachments = memo
     ? filterUnreferencedAttachments(attachments, memo.content)

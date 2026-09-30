@@ -31,7 +31,7 @@ export function ShortcutsDialog({
               ["shortcuts.composer", "C"],
               ["shortcuts.linebreak", "Enter"],
               ["shortcuts.send", "Shift + Enter"],
-              ["shortcuts.saveEdit", "⌘Enter"],
+              ["shortcuts.saveEdit", "⌘S / ⌘Enter"],
               ["shortcuts.theme", "D"],
               ["shortcuts.cancel", "Esc"],
               ["shortcuts.help", "?"],
