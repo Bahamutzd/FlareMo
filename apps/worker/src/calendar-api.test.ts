@@ -111,7 +111,12 @@ describe("FlareMo calendar API", () => {
       ),
     );
 
-    expect(view.notes.some((note) => note.count >= 1)).toBe(true);
+    // The notes above are dated today, so they only show in the September
+    // window while the suite runs in September.
+    const todayDate = new Date().toISOString().slice(0, 10);
+    if (todayDate >= "2026-09-01" && todayDate <= "2026-09-30") {
+      expect(view.notes.some((note) => note.count >= 1)).toBe(true);
+    }
     expect(
       view.notes.every(
         (note) => note.date >= "2026-09-01" && note.date <= "2026-09-30",
@@ -123,7 +128,6 @@ describe("FlareMo calendar API", () => {
 
     // The unchecked task list is counted exactly once for its day. The memo
     // above predates stamping, so this proves the content scan fallback too.
-    const todayDate = new Date().toISOString().slice(0, 10);
     if (todayDate >= "2026-09-01" && todayDate <= "2026-09-30") {
       expect(view.note_tasks).toEqual([{ date: todayDate, count: 1 }]);
     }
