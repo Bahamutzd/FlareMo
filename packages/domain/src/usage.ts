@@ -80,14 +80,37 @@ export async function reportVectorUsage(
   input: VectorUsageReportInput,
   deps: VectorUsageDeps,
 ): Promise<VectorUsageReportResult> {
-  const memoRow = await db
-    .select({
-      memoVectors: sql<number>`coalesce(sum(${memos.embeddingChunks}), 0)`,
-    })
-    .from(memos)
-    .where(
-      and(eq(memos.userId, user.id), eq(memos.embeddingStatus, "indexed")),
-    );
+  // Every figure below is an independent read; issuing them together keeps
+  // the report at one D1 round trip.
+  const [memoRow, memoryVectorCount, queriedDims, embeddingCalls, tokens] =
+    await Promise.all([
+      db
+        .select({
+          memoVectors: sql<number>`coalesce(sum(${memos.embeddingChunks}), 0)`,
+        })
+        .from(memos)
+        .where(
+          and(eq(memos.userId, user.id), eq(memos.embeddingStatus, "indexed")),
+        ),
+      deps.memoriesIndex
+        ? // Memory vectors stay single-atomic under a per-user namespace, so
+          // the caller's stored count equals their indexed memory rows.
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(memoryItems)
+            .where(
+              and(
+                eq(memoryItems.userId, user.id),
+                eq(memoryItems.embeddingStatus, "indexed"),
+              ),
+            )
+            .then((rows) => Number(rows[0]?.count ?? 0))
+            .catch(() => 0)
+        : null,
+      readCounter(db, user, "queried_dims"),
+      readCounter(db, user, "embedding_calls"),
+      readCounter(db, user, "embedding_tokens"),
+    ]);
   const memoVectors = Number(memoRow[0]?.memoVectors ?? 0);
 
   const indexes: VectorUsageIndexReport[] = [
@@ -98,33 +121,12 @@ export async function reportVectorUsage(
       stored_dimensions: memoVectors * input.dimensions,
     },
   ];
-  try {
-    if (deps.memoriesIndex) {
-      // Memory vectors stay single-atomic under a per-user namespace, so the
-      // caller's stored count equals their indexed memory rows.
-      const memoryRow = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(memoryItems)
-        .where(
-          and(
-            eq(memoryItems.userId, user.id),
-            eq(memoryItems.embeddingStatus, "indexed"),
-          ),
-        );
-      const memoryVectors = Number(memoryRow[0]?.count ?? 0);
-      indexes.push({
-        name: "flaremo-memories",
-        kind: "memory",
-        vectors_count: memoryVectors,
-        stored_dimensions: memoryVectors * input.dimensions,
-      });
-    }
-  } catch {
+  if (memoryVectorCount !== null) {
     indexes.push({
       name: "flaremo-memories",
       kind: "memory",
-      vectors_count: 0,
-      stored_dimensions: 0,
+      vectors_count: memoryVectorCount,
+      stored_dimensions: memoryVectorCount * input.dimensions,
     });
   }
 
@@ -133,13 +135,9 @@ export async function reportVectorUsage(
     model: input.model,
     dimensions: input.dimensions,
     indexes,
-    queried_dimensions_this_month: await readCounter(db, user, "queried_dims"),
-    embedding_calls_this_month: await readCounter(db, user, "embedding_calls"),
-    embedding_tokens_this_month: await readCounter(
-      db,
-      user,
-      "embedding_tokens",
-    ),
+    queried_dimensions_this_month: queriedDims,
+    embedding_calls_this_month: embeddingCalls,
+    embedding_tokens_this_month: tokens,
     stored_limit: input.storedLimit,
     queried_limit: input.queriedLimit,
   };

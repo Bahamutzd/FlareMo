@@ -314,41 +314,47 @@ export async function reportPlanUsage(
   limits: PlanLimits,
   scope?: { userId: string; userLimits: UserPlanLimits | null },
 ): Promise<PlanUsageReport> {
+  // Independent reads: issued together so the report costs one D1 round
+  // trip per group instead of one per figure.
+  const [
+    attachmentStorageBytes,
+    aiEmbeddingTokensPerMonth,
+    semanticSearchQueriesPerMonth,
+    maxMembersPerDeployment,
+    userUsage,
+  ] = await Promise.all([
+    getAttachmentStorageBytes(db),
+    readMonthlyUsageTotal(db, "embedding_tokens"),
+    readMonthlyUsageTotal(db, "search_queries"),
+    countFlaremoUsers(db),
+    scope?.userLimits
+      ? Promise.all([
+          getAttachmentStorageBytes(db, scope.userId),
+          readUserMonthlyUsage(db, scope.userId, "embedding_tokens"),
+          readUserMonthlyUsage(db, scope.userId, "search_queries"),
+          countUserMemos(db, scope.userId),
+          countUserMemories(db, scope.userId),
+        ])
+      : null,
+  ]);
   const report: PlanUsageReport = {
     limits,
     usage: {
-      attachmentStorageBytes: await getAttachmentStorageBytes(db),
-      aiEmbeddingTokensPerMonth: await readMonthlyUsageTotal(
-        db,
-        "embedding_tokens",
-      ),
-      semanticSearchQueriesPerMonth: await readMonthlyUsageTotal(
-        db,
-        "search_queries",
-      ),
-      maxMembersPerDeployment: await countFlaremoUsers(db),
+      attachmentStorageBytes,
+      aiEmbeddingTokensPerMonth,
+      semanticSearchQueriesPerMonth,
+      maxMembersPerDeployment,
     },
   };
-  if (scope?.userLimits) {
+  if (scope?.userLimits && userUsage) {
     report.user = {
       limits: scope.userLimits,
       usage: {
-        attachmentStorageBytes: await getAttachmentStorageBytes(
-          db,
-          scope.userId,
-        ),
-        aiEmbeddingTokensPerMonth: await readUserMonthlyUsage(
-          db,
-          scope.userId,
-          "embedding_tokens",
-        ),
-        semanticSearchQueriesPerMonth: await readUserMonthlyUsage(
-          db,
-          scope.userId,
-          "search_queries",
-        ),
-        maxMemosPerUser: await countUserMemos(db, scope.userId),
-        maxMemoryItemsPerUser: await countUserMemories(db, scope.userId),
+        attachmentStorageBytes: userUsage[0],
+        aiEmbeddingTokensPerMonth: userUsage[1],
+        semanticSearchQueriesPerMonth: userUsage[2],
+        maxMemosPerUser: userUsage[3],
+        maxMemoryItemsPerUser: userUsage[4],
       },
     };
   }

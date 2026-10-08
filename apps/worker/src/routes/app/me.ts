@@ -32,15 +32,17 @@ export function registerMeRoutes(app: Hono<HonoBindings>) {
       // Browser sessions carry the auth identity inside the (session-cached)
       // Better Auth session, so no extra D1 lookup is needed; non-browser
       // credentials fall back to the TTL-cached row read.
-      const resolvedAuthUser =
-        authUser ?? (await getAuthUserCached(db, authUserId));
-      // Drives the workspace sidebar: the team space entry renders only when
-      // the viewer holds an unexpired membership, labelled with the
-      // organization name. team_expired distinguishes "membership lapsed"
-      // (reader seat past its expiry) from "never joined" so the UI can show
-      // a renewal notice instead of silently hiding the space, and
-      // reader_expires_at lets the reader see their own seat's validity.
-      const state = await getMembershipState(db, authUserId);
+      // The membership state drives the workspace sidebar: the team space
+      // entry renders only when the viewer holds an unexpired membership,
+      // labelled with the organization name. team_expired distinguishes
+      // "membership lapsed" (reader seat past its expiry) from "never joined"
+      // so the UI can show a renewal notice instead of silently hiding the
+      // space, and reader_expires_at lets the reader see their own seat's
+      // validity. The two reads are independent and run together.
+      const [resolvedAuthUser, state] = await Promise.all([
+        authUser ?? getAuthUserCached(db, authUserId),
+        getMembershipState(db, authUserId),
+      ]);
       const teamExpired =
         state?.role === "reader" &&
         state.expiresAt !== null &&

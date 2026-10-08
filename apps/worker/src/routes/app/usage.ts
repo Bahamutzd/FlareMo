@@ -26,27 +26,29 @@ export function registerUsageRoutes(app: Hono<HonoBindings>) {
         c.env.FLAREMO_VECTORIZE_QUERIED_LIMIT?.trim() || "30000000",
         10,
       );
-      const report = await reportVectorUsage(
-        db,
-        user,
-        {
-          provider: config.provider,
-          model: config.model,
-          dimensions: config.dimensions,
-          storedLimit: Number.isFinite(storedLimit) ? storedLimit : 5_000_000,
-          queriedLimit: Number.isFinite(queriedLimit)
-            ? queriedLimit
-            : 30_000_000,
-        },
-        {
-          memosIndex: createVectorIndex(c.env, "memo"),
-          memoriesIndex: createVectorIndex(c.env, "memory"),
-        },
-      );
-      const plan = await reportPlanUsage(db, limits, {
-        userId: user.id,
-        userLimits,
-      });
+      const [report, plan] = await Promise.all([
+        reportVectorUsage(
+          db,
+          user,
+          {
+            provider: config.provider,
+            model: config.model,
+            dimensions: config.dimensions,
+            storedLimit: Number.isFinite(storedLimit) ? storedLimit : 5_000_000,
+            queriedLimit: Number.isFinite(queriedLimit)
+              ? queriedLimit
+              : 30_000_000,
+          },
+          {
+            memosIndex: createVectorIndex(c.env, "memo"),
+            memoriesIndex: createVectorIndex(c.env, "memory"),
+          },
+        ),
+        reportPlanUsage(db, limits, {
+          userId: user.id,
+          userLimits,
+        }),
+      ]);
       return c.json({ ...report, plan });
     } catch (error) {
       return jsonError(c, error);

@@ -164,9 +164,12 @@ export function useWorkspaceQueries({
     staleTime: 60_000,
     retry: false,
   });
+  // Keyed by the member, so it waits for /me: fetching under an empty key
+  // first would only be repeated once the id arrives.
   const captureStatusQuery = useQuery({
     queryKey: queryKeys.captureStatus.forUser(currentUserQuery.data?.id ?? ""),
     queryFn: getCaptureStatus,
+    enabled: Boolean(currentUserQuery.data?.id),
     staleTime: 30_000,
     retry: false,
   });
