@@ -14,6 +14,10 @@
   "main": "./apps/worker/src/index.ts",
   "compatibility_date": "2026-07-10",
   "compatibility_flags": ["nodejs_compat"],
+  // Run the Worker near D1 instead of near the visitor when that is faster:
+  // one API request awaits several queries in a row, and each one would
+  // otherwise cross an ocean when the visitor is far from the database.
+  "placement": { "mode": "smart" },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
