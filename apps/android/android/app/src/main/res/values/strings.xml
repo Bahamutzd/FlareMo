@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FlareMo</string>
+    <string name="title_activity_main">FlareMo</string>
+    <string name="package_name">app.flaremo.android</string>
+    <string name="custom_url_scheme">app.flaremo.android</string>
+    <string name="download_started">正在下载 %1$s</string>
+    <string name="download_saved">已保存到“下载”：%1$s</string>
+    <string name="download_failed">保存失败</string>
+</resources>

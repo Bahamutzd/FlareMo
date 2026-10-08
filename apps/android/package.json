@@ -1,0 +1,24 @@
+{
+  "name": "@flaremo/android",
+  "license": "AGPL-3.0-only",
+  "version": "0.20.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node ./scripts/prepare.mjs && cap sync android",
+    "check": "tsc -p tsconfig.json --pretty false",
+    "typecheck": "tsc -p tsconfig.json --pretty false",
+    "test": "vitest run --config ../../vitest.config.ts --passWithNoTests"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "@types/node": "^24",
+    "sharp": "^0.35.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

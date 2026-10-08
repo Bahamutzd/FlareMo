@@ -1,0 +1,6 @@
+# Written by scripts/prepare.mjs on every sync.
+/www/
+/android/app/src/main/res/mipmap-*/ic_launcher.png
+/android/app/src/main/res/mipmap-*/ic_launcher_round.png
+/android/app/src/main/res/mipmap-*/ic_launcher_foreground.png
+/android/app/src/main/res/drawable*/splash.png

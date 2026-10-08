@@ -1,0 +1,114 @@
+# Builds the FlareMo Android app (apps/android) into an installable APK.
+#
+# The app opens one FlareMo instance, chosen at build time:
+#   - repository variable FLAREMO_APP_URL (Settings -> Secrets and variables
+#     -> Actions -> Variables), e.g. https://notes.example.com
+#   - or the "app_url" input when running the workflow by hand
+#
+# Signing: with the four ANDROID_* secrets below the APK is signed with your
+# release key, so later builds install as updates. Without them it is signed
+# with a throwaway debug key: fine for trying the app, but each run's APK
+# cannot update the previous one. See docs/android-app.md.
+#
+# Every run uploads the APK as a workflow artifact; pushing a tag named
+# android-v* also attaches it to a GitHub Release.
+name: android
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: FlareMo instance the app opens (defaults to the FLAREMO_APP_URL variable)
+        required: false
+  push:
+    tags: ["android-v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FLAREMO_APP_URL: ${{ inputs.app_url || vars.FLAREMO_APP_URL }}
+    steps:
+      - name: Check the instance URL
+        run: |
+          if [ -z "$FLAREMO_APP_URL" ]; then
+            echo "::error::Set the repository variable FLAREMO_APP_URL (or pass app_url) to your FlareMo instance, e.g. https://notes.example.com"
+            exit 1
+          fi
+          case "$FLAREMO_APP_URL" in
+            https://*) ;;
+            *) echo "::error::FLAREMO_APP_URL must start with https://"; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter @flaremo/android...
+
+      - name: Sync the Capacitor project
+        run: pnpm --filter @flaremo/android sync
+
+      - name: Decode the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+            echo "FLAREMO_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+            echo "Signing with the release key."
+          else
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret: the APK is signed with a debug key and cannot update an earlier install."
+          fi
+
+      - name: Build the APK
+        working-directory: apps/android/android
+        env:
+          FLAREMO_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          FLAREMO_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          FLAREMO_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash ./gradlew --no-daemon assembleRelease
+
+      - name: Name the APK
+        id: apk
+        run: |
+          version=$(node -p "require('./apps/android/package.json').version")
+          name="FlareMo-${version}.apk"
+          cp apps/android/android/app/build/outputs/apk/release/app-release.apk "$name"
+          echo "file=$name" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.file }}
+          path: ${{ steps.apk.outputs.file }}
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "FlareMo Android ${GITHUB_REF_NAME#android-v}" --notes "FlareMo Android app for ${FLAREMO_APP_URL}."
+          gh release upload "$GITHUB_REF_NAME" "${{ steps.apk.outputs.file }}" --clobber

@@ -7,6 +7,7 @@ import { InfoTip } from "@/components/info-tip";
 import { Switch } from "@/components/ui/switch";
 import { useI18n } from "@/i18n";
 import { errorMessage } from "@/lib/error";
+import { isAndroidApp } from "@/lib/native-app";
 import { SettingsRow, SettingsSectionGroup } from "./apple-settings-ui";
 
 export function PushPanel() {
@@ -16,9 +17,12 @@ export function PushPanel() {
     queryFn: getPushConfig,
     retry: false,
   });
+  // The Android app's WebView exposes the push APIs but cannot deliver
+  // Web Push, so the toggle is hidden there.
   const [supported] = useState(
     () =>
       typeof window !== "undefined" &&
+      !isAndroidApp() &&
       "serviceWorker" in navigator &&
       "PushManager" in window &&
       "Notification" in window,

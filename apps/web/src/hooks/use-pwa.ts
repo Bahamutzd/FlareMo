@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isAndroidApp } from "@/lib/native-app";
 import {
   activateWaitingServiceWorker,
   type BeforeInstallPromptEvent,
@@ -52,15 +53,18 @@ export function usePwaInstall(): PwaInstallState & {
   /** Records that the user dismissed the in-app install entry point. */
   dismissInstall: () => void;
 } {
-  const [isInstalled, setIsInstalled] = useState(() =>
-    isStandaloneDisplay({
-      displayModeStandalone:
-        typeof window !== "undefined" &&
-        window.matchMedia("(display-mode: standalone)").matches,
-      navigatorStandalone:
-        typeof navigator !== "undefined" &&
-        (navigator as Navigator & { standalone?: boolean }).standalone === true,
-    }),
+  const [isInstalled, setIsInstalled] = useState(
+    () =>
+      isAndroidApp() ||
+      isStandaloneDisplay({
+        displayModeStandalone:
+          typeof window !== "undefined" &&
+          window.matchMedia("(display-mode: standalone)").matches,
+        navigatorStandalone:
+          typeof navigator !== "undefined" &&
+          (navigator as Navigator & { standalone?: boolean }).standalone ===
+            true,
+      }),
   );
   const [isIos] = useState(() =>
     typeof navigator === "undefined"

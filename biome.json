@@ -35,6 +35,7 @@
       "!apps/worker/src/worker-configuration.d.ts",
       "!apps/worker/src/memos-generated/**/*.ts",
       "!apps/web/src/components/ui",
+      "!apps/android/android",
       "!**/dist",
       "!**/*.tsbuildinfo"
     ]
