@@ -112,7 +112,9 @@ export const FlareMoTimeHorizon = memo(function FlareMoTimeHorizon({
     retry: false,
   });
   const yearActivity =
-    tab === "year" ? (yearStatsQuery.data?.activity ?? stats.activity) : stats.activity;
+    tab === "year"
+      ? (yearStatsQuery.data?.activity ?? stats.activity)
+      : stats.activity;
 
   // Hourly query for Day view (24 hours)
   const dayHourlyQuery = useQuery({

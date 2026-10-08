@@ -27,7 +27,13 @@
  *   pnpm startup-graph --cold             # also time cold module evaluation
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -199,7 +205,9 @@ function measureColdEval(bundlePath) {
   // Three runs: the first pays any OS page-cache cost for the file itself.
   const samples = [];
   for (let i = 0; i < 3; i += 1) {
-    const out = execFileSync(process.execPath, [probePath], { encoding: "utf8" });
+    const out = execFileSync(process.execPath, [probePath], {
+      encoding: "utf8",
+    });
     samples.push(Number(out.trim()));
   }
   return { samples, best: Math.min(...samples) };
@@ -212,7 +220,9 @@ if (withCold) {
     const t0 = performance.now();
     await build({ ...shared, outfile: bundlePath });
     if (deVariableSpecifier(bundlePath)) {
-      console.log("\npatched: variable dynamic-import specifiers (see deVariableSpecifier)");
+      console.log(
+        "\npatched: variable dynamic-import specifiers (see deVariableSpecifier)",
+      );
     }
     console.log(`bundle: ${(performance.now() - t0).toFixed(0)} ms`);
     const cold = measureColdEval(bundlePath);

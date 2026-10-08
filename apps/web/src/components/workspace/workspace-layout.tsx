@@ -164,6 +164,7 @@ export function WorkspaceLayout({
     tagHierarchyQuery.data,
     tagHierarchyQuery.isPending,
     stats,
+    timeZone,
     currentUserQuery.data,
     deleteTagMutation.mutate,
     renameTagMutation.mutate,

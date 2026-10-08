@@ -2,6 +2,7 @@ import { applyFlaremoMigrations, createDb, memos } from "@flaremo/db";
 import { eq } from "drizzle-orm";
 import { Miniflare } from "miniflare";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { recalibrateUserHourlyCounts } from "./memo-hourly-counts";
 import {
   createMemo,
   getMemoById,
@@ -9,7 +10,6 @@ import {
   listMemosForViewer,
   updateMemo,
 } from "./memos";
-import { recalibrateUserHourlyCounts } from "./memo-hourly-counts";
 import { listTagHierarchy } from "./tags";
 import type { TeamViewer } from "./team-permissions";
 import { createTeamMember, ensureTeamOwner } from "./test-support";

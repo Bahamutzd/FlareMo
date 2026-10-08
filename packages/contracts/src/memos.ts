@@ -126,7 +126,10 @@ export const memoStatsQuerySchema = z.object({
    * #144). Format-validated only: a future anchor just renders structural
    * zeros, the same shape the current year's grid already shows past today.
    */
-  until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  until: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 export const dailyReviewQuerySchema = z.object({
