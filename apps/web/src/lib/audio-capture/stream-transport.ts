@@ -1,9 +1,18 @@
-import {
-  CAPTURE_MAX_DURATION_MS,
-  type CaptureServerMessage,
-  captureServerMessageSchema,
-} from "@flaremo/contracts";
+import type { CaptureServerMessage } from "@flaremo/contracts/capture";
+import { CAPTURE_MAX_DURATION_MS } from "@flaremo/contracts/capture-limits";
 import type { CaptureSentence, CaptureState } from "./types";
+
+// The wire schema (and zod with it) loads when a session opens its socket,
+// not with the app: most visits never record.
+type ServerMessageSchema =
+  typeof import("@flaremo/contracts/capture").captureServerMessageSchema;
+let serverMessageSchema: Promise<ServerMessageSchema> | undefined;
+function loadServerMessageSchema() {
+  serverMessageSchema ??= import("@flaremo/contracts/capture").then(
+    (module) => module.captureServerMessageSchema,
+  );
+  return serverMessageSchema;
+}
 
 // While the session has no live socket (first connect or reconnect), frames
 // are buffered so speech over the gap still reaches the new session. 16 kHz
@@ -102,6 +111,9 @@ export class StreamTransport {
       if (status.kind === "batch") return this.handlers.onBatch();
       // Streaming confirmed: the unused batch sink is dropped.
       this.handlers.onStreaming();
+      // Ready before the socket exists, so every message parses in order.
+      const schema = await loadServerMessageSchema();
+      if (abort.signal.aborted || this.handlers.state() === "stopping") return;
       const socket = this.deps.socket();
       this.socket = socket;
       this.ready = false;
@@ -124,9 +136,7 @@ export class StreamTransport {
         try {
           if (typeof event.data !== "string" || event.data.length > 128_000)
             throw new Error("Invalid response");
-          const message = captureServerMessageSchema.parse(
-            JSON.parse(event.data),
-          );
+          const message = schema.parse(JSON.parse(event.data));
           this.lastMessage = Date.now();
           if (message.type === "ready") {
             if (

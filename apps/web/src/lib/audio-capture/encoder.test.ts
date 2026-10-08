@@ -1,7 +1,7 @@
 import {
   CAPTURE_BATCH_SLICE_MS,
   CAPTURE_SAMPLE_RATE,
-} from "@flaremo/contracts";
+} from "@flaremo/contracts/capture-limits";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CaptureAudioSink,

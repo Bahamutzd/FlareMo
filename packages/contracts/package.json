@@ -4,6 +4,7 @@
   "version": "0.20.1",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -14,6 +15,14 @@
     "./search-query": {
       "types": "./src/search-query.ts",
       "default": "./src/search-query.ts"
+    },
+    "./capture": {
+      "types": "./src/capture.ts",
+      "default": "./src/capture.ts"
+    },
+    "./capture-limits": {
+      "types": "./src/capture-limits.ts",
+      "default": "./src/capture-limits.ts"
     }
   },
   "scripts": {
