@@ -8,6 +8,7 @@ import {
   type PlanLimits,
   parseUserPlanLimits,
   SELF_HOST_UNLIMITED,
+  type TeamViewer,
   UnauthorizedError,
   type UserPlanLimits,
 } from "@flaremo/domain";
@@ -21,6 +22,7 @@ import type { FlareMoEnv } from "./env";
 import { memoFilterScanLimit } from "./filter-scan-limit";
 import { resolveOauthIntegrationCached } from "./integrations/config";
 import { authenticateMemosAccessToken } from "./memos-native-auth";
+import { readSignedSessionToken } from "./session-cookie";
 
 export type HonoBindings = {
   Bindings: FlareMoEnv;
@@ -318,30 +320,67 @@ export async function getBrowserRequestContext(c: Context<HonoBindings>) {
   }
 
   const db = getFlareMoDb(c.env);
-  const auth = await getFlareMoAuth(c.env);
-  const session = await auth.api.getSession({
-    headers: c.req.raw.headers,
-  });
-  if (!session) throw new UnauthorizedError();
+  const resolved = await resolveBrowserSession(c, db);
+  if (!resolved) throw new UnauthorizedError();
 
   assertTrustedCookieMutation(c);
 
-  const user = await getFlaremoUserByAuthUserId(db, session.user.id);
+  const { authUserId, authUser, user } = resolved;
   if (!user) throw new UnauthorizedError();
   assertActiveMember(user);
 
   return {
     db,
     user,
-    authUserId: session.user.id,
+    authUserId,
     credential: "session" as const,
     bearerSession: false,
     nativeAccessToken: false,
     session: null,
     memoFilterScanLimit: memoFilterScanLimit(c.env),
-    authUser: browserAuthUserSummary(session.user),
+    authUser,
     limits: c.get("planLimits") ?? SELF_HOST_UNLIMITED,
     userLimits: await resolveUserLimits(c, user.id),
+  };
+}
+
+/**
+ * The browser session behind the request's cookie. A cookie whose signature
+ * verifies is resolved in one joined query (session, auth user, domain user,
+ * membership). Anything else goes through Better Auth's own session read,
+ * which owns the remaining cases (missing or rotated secret, malformed
+ * cookie) and its own cookie cleanup. Both are live database reads, so
+ * sign-out and password resets take effect on the next request.
+ */
+async function resolveBrowserSession(
+  c: Context<HonoBindings>,
+  db: ReturnType<typeof getFlareMoDb>,
+): Promise<{
+  authUserId: string;
+  authUser: AuthUserSummary | undefined;
+  user: TeamViewer | null;
+} | null> {
+  const token = await readSignedSessionToken(c.env, c.req.raw.headers);
+  if (token) {
+    const session = await getFlaremoUserByAuthSessionToken(db, token);
+    if (session) {
+      return {
+        authUserId: session.authUserId,
+        authUser: browserAuthUserSummary(session.authUser),
+        user: session.user,
+      };
+    }
+  }
+
+  const auth = await getFlareMoAuth(c.env);
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+  });
+  if (!session) return null;
+  return {
+    authUserId: session.user.id,
+    authUser: browserAuthUserSummary(session.user),
+    user: await getFlaremoUserByAuthUserId(db, session.user.id),
   };
 }
 

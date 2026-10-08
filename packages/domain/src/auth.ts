@@ -366,8 +366,19 @@ export async function getFlaremoUserByAuthUserId(
     )
     .where(eq(authUserLinks.authUserId, authUserId))
     .get();
-  if (!row) return null;
+  return row ? toTeamViewer(row) : null;
+}
 
+/** The membership columns joined next to a domain user row. */
+type ViewerRow = {
+  user: UserRow;
+  role: string | null;
+  expiresAt: Date | null;
+  organizationId: string | null;
+  organizationName: string | null;
+};
+
+function toTeamViewer(row: ViewerRow): TeamViewer {
   const role = (row.role ?? null) as TeamRole | null;
   const membership =
     role && row.organizationId && row.organizationName
@@ -432,21 +443,50 @@ export async function getFlaremoUserByAuthSessionToken(
   db: FlareMoDb,
   token: string,
 ) {
-  const session = await db.query.authSessions.findFirst({
-    where: and(
-      eq(authSessions.token, token),
-      gt(authSessions.expiresAt, new Date()),
-    ),
-  });
-  if (!session) return null;
-
-  const user = await getFlaremoUserByAuthUserId(db, session.userId);
-  if (!user) return null;
+  // Every authenticated request lands here, so the session, the auth user
+  // (for the /me identity fields), the domain user and the team membership
+  // resolve in one indexed join rather than one round trip each. It is still
+  // a live read: a signed-out or reset session stops working immediately.
+  const row = await db
+    .select({
+      session: authSessions,
+      authUser: {
+        email: authUsers.email,
+        username: authUsers.username,
+        image: authUsers.image,
+      },
+      user: users,
+      role: authMembers.role,
+      expiresAt: authMembers.expiresAt,
+      organizationId: authOrganizations.id,
+      organizationName: authOrganizations.name,
+    })
+    .from(authSessions)
+    .innerJoin(authUsers, eq(authUsers.id, authSessions.userId))
+    .innerJoin(authUserLinks, eq(authUserLinks.authUserId, authSessions.userId))
+    .innerJoin(users, eq(users.id, authUserLinks.flaremoUserId))
+    .leftJoin(authOrganizations, eq(authOrganizations.slug, DEFAULT_TEAM_SLUG))
+    .leftJoin(
+      authMembers,
+      and(
+        eq(authMembers.userId, authSessions.userId),
+        eq(authMembers.organizationId, authOrganizations.id),
+      ),
+    )
+    .where(
+      and(
+        eq(authSessions.token, token),
+        gt(authSessions.expiresAt, new Date()),
+      ),
+    )
+    .get();
+  if (!row) return null;
 
   return {
-    authUserId: session.userId,
-    session,
-    user,
+    authUserId: row.session.userId,
+    authUser: row.authUser,
+    session: row.session,
+    user: toTeamViewer(row),
   };
 }
 

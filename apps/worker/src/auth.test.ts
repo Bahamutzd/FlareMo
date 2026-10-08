@@ -540,6 +540,44 @@ describe("FlareMo native authentication", () => {
     });
     expect(signedOutSession.status).toBe(401);
   });
+
+  it("resolves the session cookie in one lookup and rejects forged or ended sessions", async () => {
+    await bootstrapOwner();
+    const { cookie } = await signIn("owner", INITIAL_PASSWORD);
+
+    const me = await fetchRaw("/api/app/me", { headers: { cookie } });
+    expect(me.status).toBe(200);
+    expect(
+      await json<{ username: string; email: string; role: string }>(me),
+    ).toMatchObject({
+      username: "owner",
+      email: "owner@example.com",
+      role: "owner",
+    });
+
+    // A token with a signature that does not verify never authenticates.
+    const forged = cookie.replace(
+      /(flaremo\.session_token=)([^;]+)/,
+      (_match, name: string, value: string) => {
+        const decoded = decodeURIComponent(value);
+        const token = decoded.slice(0, decoded.lastIndexOf("."));
+        return `${name}${encodeURIComponent(`${token}.${"A".repeat(43)}=`)}`;
+      },
+    );
+    expect(forged).not.toBe(cookie);
+    expect(
+      (await fetchRaw("/api/app/me", { headers: { cookie: forged } })).status,
+    ).toBe(401);
+
+    const signOut = await fetchRaw("/api/auth/sign-out", {
+      method: "POST",
+      headers: { cookie, origin: "http://flaremo.test" },
+    });
+    expect(signOut.status).toBe(200);
+    expect(
+      (await fetchRaw("/api/app/me", { headers: { cookie } })).status,
+    ).toBe(401);
+  });
 });
 
 async function expectPrivateRoutesToRejectWithoutCredentials() {
