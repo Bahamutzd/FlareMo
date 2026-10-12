@@ -717,6 +717,11 @@
     @apply my-0;
   }
 
+  .composer-editor-content a,
+  .article-editor-content a {
+    @apply cursor-pointer font-medium text-brand-600 underline decoration-brand-400/40 underline-offset-4 transition-colors hover:decoration-brand-500 dark:text-brand-300 dark:hover:decoration-brand-300;
+  }
+
   .composer-editor-content blockquote,
   .article-editor-content blockquote {
     @apply my-3 rounded-e-md border-s-2 border-brand-300 bg-brand-50 py-1 pe-3 ps-4 text-muted-foreground dark:border-brand-600 dark:bg-brand-400/5;

@@ -24,6 +24,7 @@ export function buildComposerExtensions(placeholder: string) {
     StarterKit.configure({
       underline: false,
       heading: { levels: [1, 2, 3] },
+      // Link clicks are routed by `handleClick` in RichComposerEditor.
       link: { openOnClick: false },
     }),
     TaskList,
@@ -156,6 +157,12 @@ export function RichComposerEditor({
   // The markdown last pushed downstream. Guards the restore effect against
   // re-parsing the editor's own output (which would fight the update loop).
   const lastEmittedRef = useRef(content);
+  // The pointer that started the current click, and whether the editor already
+  // had focus then. Phones have no arrow keys to step into a link, so a finger
+  // tap while editing places the caret; a tap while reading opens the link.
+  // Recorded on pointerdown: ProseMirror runs handleClick from mouseup, which
+  // carries no pointerType.
+  const tapRef = useRef({ touch: false, focused: false });
 
   const editor = useEditor({
     contentType: "markdown",
@@ -217,6 +224,32 @@ export function RichComposerEditor({
           return true;
         }
         return false;
+      },
+      handleDOMEvents: {
+        pointerdown: (view, event) => {
+          tapRef.current = {
+            touch: event.pointerType === "touch",
+            focused: view.hasFocus(),
+          };
+          return false;
+        },
+      },
+      handleClick: (view, _pos, event) => {
+        // A read-only editor leaves the anchor to the browser's own click.
+        if (!view.editable || event.button !== 0) return false;
+        const link = (event.target as HTMLElement | null)?.closest("a[href]");
+        if (!(link instanceof HTMLAnchorElement)) return false;
+        if (!view.dom.contains(link)) return false;
+        // TipTap blanks the href of a disallowed protocol; nothing to open.
+        if (!link.getAttribute("href")) return false;
+        if (tapRef.current.touch) {
+          if (tapRef.current.focused) return false;
+          // The tap focused the editor on its way in; drop that focus so the
+          // keyboard does not pop up behind the opened page.
+          view.dom.blur();
+        }
+        window.open(link.href, "_blank", "noopener,noreferrer");
+        return true;
       },
       handlePaste: (view, event) => {
         const files = extractImageFiles(event.clipboardData?.files ?? []);

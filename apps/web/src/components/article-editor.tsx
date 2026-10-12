@@ -23,6 +23,7 @@ export function buildArticleExtensions(placeholder: string) {
     StarterKit.configure({
       underline: false,
       heading: { levels: [1, 2, 3, 4] },
+      // Link clicks are routed by `handleClick` in RichComposerEditor.
       link: { openOnClick: false },
       // The official highlighted code block replaces the starter-kit one.
       codeBlock: false,
